@@ -39,8 +39,13 @@ export interface CursorPageResponse<T> {
   nextCursor: string | null;
   hasMore: boolean;
 }
-2. 全局枚举定义
-typescript
+```
+
+---
+
+## 2. 全局枚举定义
+
+```typescript
 /**
  * 异常类型枚举
  */
@@ -120,9 +125,15 @@ export type NodeType =
   | 'ARRIVAL'     // 到达
   | 'DELIVERY'    // 派送
   | 'SIGNED';     // 签收
-3. 运单与轨迹模块 (Waybill & Tracking)
-3.1 类型定义
-typescript
+```
+
+---
+
+## 3. 运单与轨迹模块 (Waybill & Tracking)
+
+### 3.1 类型定义
+
+```typescript
 /**
  * 运输节点 (对应后端 TransportNodeVO)
  */
@@ -177,13 +188,19 @@ export interface WaybillDetail {
   createdAt: string;
   updatedAt: string;
 }
-3.2 接口路径
-HTTP 方法	路径	说明	权限
-GET	/api/v1/customer/waybills	查询本人运单列表	客户
-GET	/api/v1/customer/waybills/{waybillNo}	查询本人运单详情与轨迹	客户
-GET	/api/v1/customer/waybills/{waybillNo}/tracks	查询运单轨迹列表	客户
-3.3 请求函数
-typescript
+```
+
+### 3.2 接口路径
+
+| HTTP 方法 | 路径 | 说明 | 权限 |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/customer/waybills` | 查询本人运单列表 | 客户 |
+| GET | `/api/v1/customer/waybills/{waybillNo}` | 查询本人运单详情与轨迹 | 客户 |
+| GET | `/api/v1/customer/waybills/{waybillNo}/tracks` | 查询运单轨迹列表 | 客户 |
+
+### 3.3 请求函数
+
+```typescript
 /**
  * 查询本人运单列表
  */
@@ -217,9 +234,15 @@ export const getWaybillTracks = async (waybillNo: string): Promise<TrackRecord[]
   );
   return resp.data.data;
 };
-4. 异常反馈模块 (Exception Feedback)
-4.1 类型定义
-typescript
+```
+
+---
+
+## 4. 异常反馈模块 (Exception Feedback)
+
+### 4.1 类型定义
+
+```typescript
 /**
  * 提交异常反馈请求参数 (对应后端 CreateFeedbackDTO)
  */
@@ -242,12 +265,18 @@ export interface ExceptionFeedback {
   createdAt: string;
   updatedAt: string;
 }
-4.2 接口路径
-HTTP 方法	路径	说明	权限
-POST	/api/v1/customer/exception-feedbacks	提交异常反馈	客户
-GET	/api/v1/customer/exception-feedbacks/{id}	查询异常反馈详情	客户
-4.3 请求函数
-typescript
+```
+
+### 4.2 接口路径
+
+| HTTP 方法 | 路径 | 说明 | 权限 |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/v1/customer/exception-feedbacks` | 提交异常反馈 | 客户 |
+| GET | `/api/v1/customer/exception-feedbacks/{id}` | 查询异常反馈详情 | 客户 |
+
+### 4.3 请求函数
+
+```typescript
 /**
  * 提交异常反馈
  * 运单不存在或不属于当前客户时，后端返回 40400
@@ -269,9 +298,15 @@ export const getFeedbackDetail = async (id: number): Promise<ExceptionFeedback> 
   );
   return resp.data.data;
 };
-5. 工单模块 - 客户视角 (Customer Ticket)
-5.1 类型定义
-typescript
+```
+
+---
+
+## 5. 工单模块 - 客户视角 (Customer Ticket)
+
+### 5.1 类型定义
+
+```typescript
 /**
  * 沟通记录 (对应后端 CommunicationVO)
  */
@@ -316,14 +351,20 @@ export interface RejectTicketRequest {
   ticketId: number;
   reason: string;
 }
-5.2 接口路径
-HTTP 方法	路径	说明	权限
-GET	/api/v1/customer/tickets	查询本人工单列表	客户
-GET	/api/v1/customer/tickets/{id}	查询工单公开进度	客户
-POST	/api/v1/customer/tickets/{id}/confirm	确认处理结果	客户
-POST	/api/v1/customer/tickets/{id}/reject	不认可并申请继续处理	客户
-5.3 请求函数
-typescript
+```
+
+### 5.2 接口路径
+
+| HTTP 方法 | 路径 | 说明 | 权限 |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/customer/tickets` | 查询本人工单列表 | 客户 |
+| GET | `/api/v1/customer/tickets/{id}` | 查询工单公开进度 | 客户 |
+| POST | `/api/v1/customer/tickets/{id}/confirm` | 确认处理结果 | 客户 |
+| POST | `/api/v1/customer/tickets/{id}/reject` | 不认可并申请继续处理 | 客户 |
+
+### 5.3 请求函数
+
+```typescript
 /**
  * 查询本人工单列表
  */
@@ -368,9 +409,15 @@ export const rejectTicket = async (data: RejectTicketRequest): Promise<void> => 
     data
   );
 };
-6. 工单模块 - 客服视角 (CS Ticket)
-6.1 类型定义
-typescript
+```
+
+---
+
+## 6. 工单模块 - 客服视角 (CS Ticket)
+
+### 6.1 类型定义
+
+```typescript
 /**
  * 创建工单请求参数 (对应后端 CreateTicketDTO)
  */
@@ -417,16 +464,22 @@ export interface InternalTicket {
   createdAt: string;
   updatedAt: string;
 }
-6.2 接口路径
-HTTP 方法	路径	说明	权限
-POST	/api/v1/cs/tickets	创建工单	客服
-POST	/api/v1/cs/tickets/{id}/assign	分派工单	客服
-GET	/api/v1/cs/tickets	查询工单列表	客服
-GET	/api/v1/cs/tickets/{id}	查询工单详情	客服
-POST	/api/v1/cs/tickets/{id}/customer-feedback	确认对外说明	客服
-POST	/api/v1/cs/tickets/{id}/close	关闭工单	客服
-6.3 请求函数
-typescript
+```
+
+### 6.2 接口路径
+
+| HTTP 方法 | 路径 | 说明 | 权限 |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/v1/cs/tickets` | 创建工单 | 客服 |
+| POST | `/api/v1/cs/tickets/{id}/assign` | 分派工单 | 客服 |
+| GET | `/api/v1/cs/tickets` | 查询工单列表 | 客服 |
+| GET | `/api/v1/cs/tickets/{id}` | 查询工单详情 | 客服 |
+| POST | `/api/v1/cs/tickets/{id}/customer-feedback` | 确认对外说明 | 客服 |
+| POST | `/api/v1/cs/tickets/{id}/close` | 关闭工单 | 客服 |
+
+### 6.3 请求函数
+
+```typescript
 /**
  * 创建工单
  */
@@ -488,9 +541,15 @@ export const confirmCustomerFeedback = async (
 export const closeTicket = async (id: number): Promise<void> => {
   await apiClient.post<ApiResponse<void>>(`/cs/tickets/${id}/close`);
 };
-7. 工单模块 - 运营视角 (Ops Ticket)
-7.1 类型定义
-typescript
+```
+
+---
+
+## 7. 工单模块 - 运营视角 (Ops Ticket)
+
+### 7.1 类型定义
+
+```typescript
 /**
  * 记录内部核实过程请求参数 (对应后端 CreateInternalRecordDTO)
  */
@@ -507,15 +566,21 @@ export interface SubmitHandlingResultRequest {
   plan: string;
   result: string;
 }
-7.2 接口路径
-HTTP 方法	路径	说明	权限
-GET	/api/v1/ops/tickets	查询本人待办工单	运营
-GET	/api/v1/ops/tickets/{id}	查询工单详情	运营
-POST	/api/v1/ops/tickets/{id}/accept	受理工单	运营（仅被分派）
-POST	/api/v1/ops/tickets/{id}/internal-records	记录内部核实过程	运营（仅被分派）
-POST	/api/v1/ops/tickets/{id}/handling-result	提交处理结果	运营（仅被分派）
-7.3 请求函数
-typescript
+```
+
+### 7.2 接口路径
+
+| HTTP 方法 | 路径 | 说明 | 权限 |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/v1/ops/tickets` | 查询本人待办工单 | 运营 |
+| GET | `/api/v1/ops/tickets/{id}` | 查询工单详情 | 运营 |
+| POST | `/api/v1/ops/tickets/{id}/accept` | 受理工单 | 运营（仅被分派） |
+| POST | `/api/v1/ops/tickets/{id}/internal-records` | 记录内部核实过程 | 运营（仅被分派） |
+| POST | `/api/v1/ops/tickets/{id}/handling-result` | 提交处理结果 | 运营（仅被分派） |
+
+### 7.3 请求函数
+
+```typescript
 /**
  * 查询本人待办工单
  * 仅返回 assigneeId 等于当前运营的工单
@@ -577,18 +642,27 @@ export const submitHandlingResult = async (
     data
   );
 };
-8. 错误码与异常处理
-8.1 业务异常码规范
-异常码	含义	HTTP 状态码	场景示例
-20000	成功	200	正常返回
-40000	参数校验失败	400	必填字段缺失、格式错误
-40100	未登录	401	Token 缺失或失效
-40300	无权操作	403	非被分派运营尝试受理工单
-40400	资源不存在	404	运单不存在或无权查看
-40900	状态冲突	409	已关闭工单重复关闭
-50000	系统异常	500	未捕获的运行时异常
-8.2 前端统一处理
-typescript
+```
+
+---
+
+## 8. 错误码与异常处理
+
+### 8.1 业务异常码规范
+
+| 异常码 | 含义 | HTTP 状态码 | 场景示例 |
+| :--- | :--- | :---: | :--- |
+| `20000` | 成功 | 200 | 正常返回 |
+| `40000` | 参数校验失败 | 400 | 必填字段缺失、格式错误 |
+| `40100` | 未登录 | 401 | Token 缺失或失效 |
+| `40300` | 无权操作 | 403 | 非被分派运营尝试受理工单 |
+| `40400` | 资源不存在 | 404 | 运单不存在或无权查看 |
+| `40900` | 状态冲突 | 409 | 已关闭工单重复关闭 |
+| `50000` | 系统异常 | 500 | 未捕获的运行时异常 |
+
+### 8.2 前端统一处理
+
+```typescript
 /**
  * 业务异常类
  */
@@ -634,25 +708,36 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-9. 接口契约检查清单
-检查项	说明	状态
-字段名统一小驼峰	后端 Java 与前端 TypeScript 均使用 camelCase	✅
-枚举值统一大写下划线	如 PENDING_CS_CONFIRM、INTERNAL_ONLY	✅
-时间字段统一 ISO 字符串	后端 LocalDateTime 序列化为 ISO 格式	✅
-客户与内部 VO 分离	CustomerTicket 与 InternalTicket 严格区分	✅
-所有接口返回 ApiResponse<T>	统一响应结构，前端拦截器统一解包	✅
-所有错误走全局异常处理	不允许 Controller 直接返回裸错误	✅
-幂等接口有防重机制	关闭工单、受理、提交结果需防重	✅
-分页使用 Cursor-based	单页大小默认 20，最大 100	✅
-运单归属校验	客户查询非本人运单返回 40400	✅
-分派独占校验	非被分派运营操作返回 40300	✅
-重复关闭校验	已关闭工单重复关闭返回 40900	✅
-内部记录不返回客户	客户接口不返回 INTERNAL_ONLY 记录	✅
-10. 接口总览
-模块	接口数	主要权限
-运单与轨迹	3	客户
-异常反馈	2	客户
-工单 - 客户视角	4	客户
-工单 - 客服视角	6	客服
-工单 - 运营视角	5	运营
-合计	20	—
+```
+
+---
+
+## 9. 接口契约检查清单
+
+| 检查项 | 说明 | 状态 |
+| :--- | :--- | :---: |
+| 字段名统一小驼峰 | 后端 Java 与前端 TypeScript 均使用 `camelCase` | ✅ |
+| 枚举值统一大写下划线 | 如 `PENDING_CS_CONFIRM`、`INTERNAL_ONLY` | ✅ |
+| 时间字段统一 ISO 字符串 | 后端 `LocalDateTime` 序列化为 ISO 格式 | ✅ |
+| 客户与内部 VO 分离 | `CustomerTicket` 与 `InternalTicket` 严格区分 | ✅ |
+| 所有接口返回 `ApiResponse<T>` | 统一响应结构，前端拦截器统一解包 | ✅ |
+| 所有错误走全局异常处理 | 不允许 Controller 直接返回裸错误 | ✅ |
+| 幂等接口有防重机制 | 关闭工单、受理、提交结果需防重 | ✅ |
+| 分页使用 Cursor-based | 单页大小默认 20，最大 100 | ✅ |
+| 运单归属校验 | 客户查询非本人运单返回 `40400` | ✅ |
+| 分派独占校验 | 非被分派运营操作返回 `40300` | ✅ |
+| 重复关闭校验 | 已关闭工单重复关闭返回 `40900` | ✅ |
+| 内部记录不返回客户 | 客户接口不返回 `INTERNAL_ONLY` 记录 | ✅ |
+
+---
+
+## 10. 接口总览
+
+| 模块 | 接口数 | 主要权限 |
+| :--- | :---: | :--- |
+| 运单与轨迹 | 3 | 客户 |
+| 异常反馈 | 2 | 客户 |
+| 工单 - 客户视角 | 4 | 客户 |
+| 工单 - 客服视角 | 6 | 客服 |
+| 工单 - 运营视角 | 5 | 运营 |
+| **合计** | **20** | — |
