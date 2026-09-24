@@ -1,0 +1,106 @@
+/**
+ * 全局样式入口
+ * 作用：
+ * 1. 引入 Tailwind 三层指令
+ * 2. 定义深空渐变底 + 微弱网格线/径向光斑背景
+ * 3. 在 @layer components 中沉淀玻璃拟态等可复用样式原语
+ *    （颜色 / 阴影 / 字体令牌统一来自 tailwind.config.js）
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #app {
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-ink-900 text-gray-200 font-sans antialiased;
+    /* 深色渐变底：#0A0E1A → #111827 */
+    background-image:
+      radial-gradient(ellipse 60% 50% at 20% 0%, rgba(0, 229, 255, 0.06), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 85% 15%, rgba(139, 92, 246, 0.07), transparent 60%),
+      linear-gradient(180deg, #0a0e1a 0%, #111827 100%);
+    background-attachment: fixed;
+  }
+
+  /* 微弱网格线叠层（固定定位，不拦截事件） */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0;
+  }
+
+  /* 数字 / 时间统一等宽字体的便捷类 */
+  .num {
+    @apply font-mono tabular-nums;
+  }
+
+  /* 科技感滚动条 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-white/10;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand/40;
+  }
+}
+
+@layer components {
+  /**
+   * 玻璃拟态容器原语
+   * 半透明底 + 1px 低透明描边 + backdrop-blur，组件层在此基础上追加圆角/阴影
+   */
+  .glass {
+    @apply border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl;
+  }
+
+  /** hover 时轻微上浮 + 发光增强（可交互卡片使用） */
+  .glass-hover {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-neon;
+  }
+
+  /* 主按钮（电光蓝描边发光） */
+  .btn-neon {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand/40 bg-brand/10
+      px-4 py-2 text-sm font-medium text-brand transition-all duration-200
+      hover:bg-brand/20 hover:shadow-neon
+      disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+
+  /* 次按钮（玻璃描边） */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03]
+      px-4 py-2 text-sm font-medium text-gray-300 transition-all duration-200
+      hover:border-white/25 hover:text-white
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* 危险按钮 */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl border border-danger/40 bg-danger/10
+      px-4 py-2 text-sm font-medium text-danger transition-all duration-200
+      hover:bg-danger/20 hover:shadow-neon-danger
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* 表单输入框（科技感玻璃底） */
+  .input-glass {
+    @apply w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-sm text-gray-200
+      placeholder-gray-500 outline-none transition-all duration-200
+      focus:border-brand/50 focus:shadow-neon
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
