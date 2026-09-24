@@ -4,7 +4,8 @@
  * 全局前置守卫（未登录跳 /login、越权跳回本角色首页）与页面标题同步。
  *
  * 阶段 3：11 个业务页面均已接入（按角色分块懒加载）；
- * /login 仍为脚手架占位（登录接口未在 API.md 冻结，登录页在认证契约确认后实现）。
+ * /login 已接入 LoginView：调用登录接口 → Pinia 持久化 token → redirect 回跳。
+ * 登录接口为 provisional（API.md 冻结版未含认证章节），路径待后端契约确认后对齐。
  */
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import type { LoginRole } from '@/api/api-contracts';
@@ -42,12 +43,11 @@ const routes: RouteRecordRaw[] = [
   },
 
   /* -------------------------------- 登录 ------------------------------- */
-  // 登录接口尚未冻结，阶段 3 暂用占位；认证契约确认后替换为 auth/LoginView.vue
+  // 统一登录入口：登录接口 provisional，待后端认证契约冻结后对齐
   {
     path: '/login',
     name: 'Login',
-    component: PlaceholderView,
-    props: { title: '登录（待接入认证接口）' },
+    component: () => import('@/views/auth/LoginView.vue'),
     meta: { title: '登录', public: true },
   },
 

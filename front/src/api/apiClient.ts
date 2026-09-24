@@ -1,6 +1,6 @@
 /**
  * @file apiClient.ts
- * 文件作用：Axios 实例的统一封装（baseURL="/api/v1"），是全站唯一的 HTTP 出口。
+ * 文件作用：Axios 实例的统一封装（baseURL 取自 VITE_API_BASE_URL），是全站唯一的 HTTP 出口。
  *
  * 职责：
  * 1. 请求拦截器：自动注入 JWT（Authorization: Bearer <token>）
@@ -24,9 +24,13 @@ import { notify } from '@/utils/notify';
 /** localStorage 中 JWT 的 key（与 stores/auth.ts 保持一致） */
 export const TOKEN_KEY = 'access_token';
 
-/** 创建 axios 实例 */
+/**
+ * 创建 axios 实例
+ * baseURL 取自 .env.development 的 VITE_API_BASE_URL（默认 /api/v1），
+ * 开发态由 vite.config.ts 代理 /api → VITE_API_TARGET 解决跨域。
+ */
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

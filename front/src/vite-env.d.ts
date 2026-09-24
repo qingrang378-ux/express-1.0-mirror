@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string;
   /** 后端服务地址，仅供 vite.config.ts 代理 target 使用 */
   readonly VITE_API_TARGET: string;
+  /** 是否启用前端 Mock（dev 预览用，'true' 启用） */
+  readonly VITE_ENABLE_MOCK?: string;
 }
 
 interface ImportMeta {
