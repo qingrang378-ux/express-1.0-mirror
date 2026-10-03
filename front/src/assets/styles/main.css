@@ -2,9 +2,9 @@
  * 全局样式入口
  * 作用：
  * 1. 引入 Tailwind 三层指令
- * 2. 定义深空渐变底 + 微弱网格线/径向光斑背景
- * 3. 在 @layer components 中沉淀玻璃拟态等可复用样式原语
- *    （颜色 / 阴影 / 字体令牌统一来自 tailwind.config.js）
+ * 2. 落地设计规范 §1.1/§1.4 的页面底色与低透网格（当前为亮色主题版本）
+ * 3. 在 @layer components 中沉淀双层玻璃卡片、按钮、输入框等可复用原语
+ *    （颜色 / 阴影 / 字体 / 圆角令牌统一来自 tailwind.config.js，此处不出现硬编码色值）
  */
 @tailwind base;
 @tailwind components;
@@ -18,26 +18,31 @@
   }
 
   body {
-    @apply bg-ink-900 text-gray-200 font-sans antialiased;
-    /* 深色渐变底：#0A0E1A → #111827 */
-    background-image:
-      radial-gradient(ellipse 60% 50% at 20% 0%, rgba(0, 229, 255, 0.06), transparent 60%),
-      radial-gradient(ellipse 50% 40% at 85% 15%, rgba(139, 92, 246, 0.07), transparent 60%),
-      linear-gradient(180deg, #0a0e1a 0%, #111827 100%);
-    background-attachment: fixed;
+    @apply bg-ink-900 text-gray-100 font-sans antialiased;
   }
 
-  /* 微弱网格线叠层（固定定位，不拦截事件） */
+  /* 主色低透网格叠层（规范 §1.1：透明度 6%；§5.1：极慢横向流动） */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     pointer-events: none;
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-    background-size: 40px 40px;
+      linear-gradient(rgba(11, 124, 147, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(11, 124, 147, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+    animation: hud-grid-flow 24s linear infinite;
     z-index: 0;
+  }
+
+  /* 网格流动：位移一个网格周期（32px），首尾无缝，故无跳变 */
+  @keyframes hud-grid-flow {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 32px 0;
+    }
   }
 
   /* 数字 / 时间统一等宽字体的便捷类 */
@@ -51,56 +56,185 @@
     height: 8px;
   }
   ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-white/10;
+    @apply rounded-full bg-fill-2;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-brand/40;
+    @apply bg-fill-3;
   }
 }
 
 @layer components {
   /**
-   * 玻璃拟态容器原语
-   * 半透明底 + 1px 低透明描边 + backdrop-blur，组件层在此基础上追加圆角/阴影
+   * 卡片外层原语（规范 §2.4）
+   * 半透明白底 + 6px 背景模糊 + 1px 淡青蓝细描边；亮色主题靠柔和投影表达悬浮层级；大卡片圆角 8px
    */
   .glass {
-    @apply border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl;
+    @apply border border-edge bg-panel shadow-card backdrop-blur-[6px];
   }
 
-  /** hover 时轻微上浮 + 发光增强（可交互卡片使用） */
+  /**
+   * 卡片内层原语（规范 §2.4：表格、列表、表单内部区域）
+   * 更深半透明底色、无描边，仅靠分层区分层级
+   */
+  .glass-inner {
+    @apply rounded-xl bg-panel-inner;
+  }
+
+  /** hover 时轻微提亮（可交互卡片：规范明确「悬浮轻微提亮，无发光」） */
   .glass-hover {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-neon;
+    @apply transition-colors duration-200 hover:border-edge-strong hover:bg-fill-1;
   }
 
-  /* 主按钮（电光蓝描边发光） */
-  .btn-neon {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand/40 bg-brand/10
-      px-4 py-2 text-sm font-medium text-brand transition-all duration-200
-      hover:bg-brand/20 hover:shadow-neon
-      disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  /**
+   * 卡片头部模块（规范 §2.4「标题 + 极简小图标」，§1.2 模块标题 18px/24px）
+   */
+  .card-title {
+    @apply flex items-center gap-2 text-module font-semibold text-gray-100;
   }
 
-  /* 次按钮（玻璃描边） */
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03]
-      px-4 py-2 text-sm font-medium text-gray-300 transition-all duration-200
-      hover:border-white/25 hover:text-white
-      disabled:cursor-not-allowed disabled:opacity-50;
+  /* ==========================================================================
+   * 按钮（规范 §2.1）：三档高度 + 五种变体 + 四态（默认 / hover / active / disabled）
+   * 高度：大号 40px=页面主操作、中号 34px=表单与表格操作（默认）、小号 28px=卡片内次要操作
+   * 说明：规范 §1.3 把 40/34/28 定为组件尺寸档，不属于六档布局间距，故在此单点声明
+   * ========================================================================== */
+  .btn {
+    @apply inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap rounded border font-semibold transition-all duration-200;
+  }
+  .btn-lg {
+    height: 40px;
+    padding: 0 24px;
+    font-size: 14px;
+  }
+  .btn-md {
+    height: 34px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+  .btn-sm {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  /* 纯图标按钮：方形触控区，不给左右内边距（与尺寸档同层高，靠声明顺序覆盖 padding） */
+  .btn-icon {
+    width: 34px;
+    padding: 0;
   }
 
-  /* 危险按钮 */
+  /* 主按钮（科技青蓝）：默认实色填充；hover 外发光扩散；active 轻微压暗；disabled 低透无光影 */
+  .btn-primary {
+    @apply border-brand bg-brand text-white
+      hover:shadow-neon-hover
+      active:brightness-90
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+  }
+
+  /* 成功按钮（冷绿）：仅用于办结、确认完成 */
+  .btn-success {
+    @apply border-success bg-success text-white
+      hover:shadow-neon-success
+      active:brightness-90
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+  }
+
+  /* 警告按钮（橙）：仅用于超时处理、加急操作 */
+  .btn-warn {
+    @apply border-warn bg-warn text-white
+      hover:shadow-neon-warn
+      active:brightness-90
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
+  }
+
+  /* 危险按钮（红）：仅用于异常作废、撤销、删除 */
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-xl border border-danger/40 bg-danger/10
-      px-4 py-2 text-sm font-medium text-danger transition-all duration-200
-      hover:bg-danger/20 hover:shadow-neon-danger
-      disabled:cursor-not-allowed disabled:opacity-50;
+    @apply border-danger bg-danger text-white
+      hover:shadow-neon-danger
+      active:brightness-90
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none;
   }
 
-  /* 表单输入框（科技感玻璃底） */
+  /* 文字按钮：无边框无填充（透明边框占位防抖动），hover 文字提亮并显出细边光影 */
+  .btn-text {
+    @apply border-transparent bg-transparent font-normal text-gray-300
+      hover:border-edge-strong hover:text-gray-100 hover:shadow-neon
+      active:bg-fill-1
+      disabled:cursor-not-allowed disabled:border-transparent disabled:text-gray-600 disabled:shadow-none;
+  }
+
+  /* ==========================================================================
+   * 输入框（规范 §2.2）：label 置顶 + 输入区居中 + 占位低透；disabled 低透无交互
+   * label 统一为辅助文字档（§1.2：12px / 次要文字），与控件的间距由使用方按 8px 档给
+   * ========================================================================== */
+  .input-label {
+    @apply block text-xs font-normal text-gray-400;
+  }
+
   .input-glass {
-    @apply w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-sm text-gray-200
-      placeholder-gray-500 outline-none transition-all duration-200
-      focus:border-brand/50 focus:shadow-neon
-      disabled:cursor-not-allowed disabled:opacity-50;
+    @apply w-full rounded border border-edge bg-transparent px-4 py-2 text-sm text-gray-100
+      placeholder:text-hint outline-none transition-all duration-200
+      focus:border-brand focus:bg-fill-1 focus:shadow-neon
+      disabled:cursor-not-allowed disabled:bg-fill-1 disabled:text-gray-600 disabled:shadow-none;
+    min-height: 34px;
+    /* 聚焦扫描线（规范 §1.4：一次性从左至右，禁止无限循环） */
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(11, 124, 147, 0.18),
+      transparent
+    );
+    background-repeat: no-repeat;
+    background-size: 40% 100%;
+    background-position: -60% 0;
+  }
+
+  .input-glass:focus {
+    animation: hud-scan-once 420ms ease-out;
+  }
+
+  /* ==========================================================================
+   * 表格（规范 §2.5）：表头小字浅色无加粗 + 背景微透加深；无竖线，仅底部极浅分割；
+   * 行 hover 整行提亮 + 左侧 4px 青色标记竖线
+   * ========================================================================== */
+  .hud-table thead th {
+    @apply bg-fill-1 text-xs font-normal text-gray-400;
+  }
+  .hud-table tbody tr {
+    @apply border-b border-edge-faint transition-colors duration-200 last:border-b-0 hover:bg-fill-1 hover:shadow-row-marker;
+  }
+
+  /* ==========================================================================
+   * 弹窗（规范 §2.7）：双层半透明模糊 + 顶部青蓝发光细边作为视觉聚焦
+   * ========================================================================== */
+  .modal-hud {
+    @apply glass relative overflow-hidden rounded-dialog;
+  }
+  .modal-hud::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    @apply bg-brand shadow-modal-top;
+  }
+}
+
+/* 聚焦扫描线：单次掠过，结束后停在不可见位置，不循环 */
+@keyframes hud-scan-once {
+  from {
+    background-position: -60% 0;
+  }
+  to {
+    background-position: 160% 0;
+  }
+}
+
+/* 规范 §5.2：禁止影响长时间办公视觉疲劳的强动效，系统级降低动效偏好下全部无限动画停摆 */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  .animate-breathe-warn,
+  .animate-shimmer,
+  .animate-enter-up,
+  .animate-dialog-in,
+  .input-glass:focus {
+    animation: none !important;
   }
 }

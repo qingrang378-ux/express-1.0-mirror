@@ -14,6 +14,7 @@ import type {
   CursorPageResponse,
   CustomerTicket,
   InternalTicket,
+  OpsAssignee,
   RejectTicketRequest,
   SubmitHandlingResultRequest,
 } from './api-contracts';
@@ -50,9 +51,13 @@ export async function getCustomerTicketDetail(id: number): Promise<CustomerTicke
  * 客户确认处理结果
  * POST /api/v1/customer/tickets/{id}/confirm
  * 工单状态必须为 PENDING_CUSTOMER_CONFIRM
+ * @param remark 确认备注，后端保存为客户可见沟通记录（API.md §5.1 ConfirmTicketRequest）
  */
-export async function confirmTicket(id: number): Promise<void> {
-  await apiClient.post<ApiResponse<void>>(`/customer/tickets/${id}/confirm`);
+export async function confirmTicket(id: number, remark?: string): Promise<void> {
+  await apiClient.post<ApiResponse<void>>(`/customer/tickets/${id}/confirm`, {
+    ticketId: id,
+    remark,
+  });
 }
 
 /**
@@ -68,6 +73,16 @@ export async function rejectTicket(data: RejectTicketRequest): Promise<void> {
 }
 
 /* ----------------------------- 客服视角 ----------------------------- */
+
+/**
+ * 查询可分派的运营候选人（含当前待办数）
+ * GET /api/v1/cs/ops-staff
+ * 【provisional】v1.1 提案接口（API.md §11），冻结版未含，路径待后端确认。
+ */
+export async function getOpsAssignees(): Promise<OpsAssignee[]> {
+  const resp = await apiClient.get<ApiResponse<OpsAssignee[]>>('/cs/ops-staff');
+  return resp.data.data;
+}
 
 /**
  * 创建工单

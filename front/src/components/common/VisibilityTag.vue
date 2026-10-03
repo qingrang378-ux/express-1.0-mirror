@@ -30,7 +30,7 @@ const visible = computed(() => props.visibility === 'INTERNAL_ONLY' || props.sho
     <!-- 仅内部可见：灰色虚线描边 + 锁 -->
     <span
       v-if="visibility === 'INTERNAL_ONLY'"
-      class="inline-flex items-center gap-1 rounded-md border border-dashed border-gray-500/50 bg-white/[0.02] px-1.5 py-0.5 text-[11px] font-medium leading-4 text-gray-400"
+      class="inline-flex items-center gap-1 rounded-md border border-dashed border-gray-500/50 bg-fill-1 px-1.5 py-0.5 text-micro leading-4 text-gray-400"
     >
       <Lock :size="11" :stroke-width="2.2" />
       INTERNAL · 仅内部可见
@@ -39,7 +39,7 @@ const visible = computed(() => props.visibility === 'INTERNAL_ONLY' || props.sho
     <!-- 客户可见：低对比弱化标签 -->
     <span
       v-else
-      class="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.02] px-1.5 py-0.5 text-[11px] font-medium leading-4 text-gray-500"
+      class="inline-flex items-center gap-1 rounded-md border border-edge-faint bg-fill-1 px-1.5 py-0.5 text-micro leading-4 text-gray-500"
     >
       <Eye :size="11" :stroke-width="2.2" />
       客户可见

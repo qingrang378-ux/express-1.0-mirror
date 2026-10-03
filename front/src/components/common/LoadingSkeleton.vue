@@ -25,7 +25,7 @@ const rowKeys = computed(() => Array.from({ length: props.rows }, (_, i) => i));
 </script>
 
 <template>
-  <div role="status" aria-label="加载中" class="animate-pulse">
+  <div role="status" aria-label="加载中" class="animate-shimmer">
     <!-- 卡片型 -->
     <div v-if="type === 'card'" class="space-y-4">
       <div
@@ -33,32 +33,32 @@ const rowKeys = computed(() => Array.from({ length: props.rows }, (_, i) => i));
         :key="key"
         class="glass rounded-2xl p-5"
       >
-        <div class="mb-3 h-4 w-1/3 rounded bg-white/[0.08]" />
-        <div class="mb-2 h-3 w-full rounded bg-white/[0.06]" />
-        <div class="mb-2 h-3 w-5/6 rounded bg-white/[0.06]" />
-        <div class="h-3 w-2/3 rounded bg-white/[0.06]" />
+        <div class="mb-3 h-4 w-1/3 rounded bg-fill-2" />
+        <div class="mb-2 h-3 w-full rounded bg-fill-2" />
+        <div class="mb-2 h-3 w-5/6 rounded bg-fill-2" />
+        <div class="h-3 w-2/3 rounded bg-fill-2" />
       </div>
     </div>
 
     <!-- 表格型 -->
     <div v-else-if="type === 'table'" class="glass overflow-hidden rounded-2xl">
       <!-- 表头 -->
-      <div class="flex items-center gap-4 border-b border-white/[0.06] px-4 py-3">
-        <div class="h-3 w-1/4 rounded bg-white/[0.1]" />
-        <div class="h-3 w-1/5 rounded bg-white/[0.1]" />
-        <div class="h-3 w-1/6 rounded bg-white/[0.1]" />
-        <div class="ml-auto h-3 w-16 rounded bg-white/[0.1]" />
+      <div class="flex items-center gap-4 border-b border-edge-faint px-4 py-3">
+        <div class="h-3 w-1/4 rounded bg-fill-3" />
+        <div class="h-3 w-1/5 rounded bg-fill-3" />
+        <div class="h-3 w-1/6 rounded bg-fill-3" />
+        <div class="ml-auto h-3 w-16 rounded bg-fill-3" />
       </div>
       <!-- 数据行 -->
       <div
         v-for="key in rowKeys"
         :key="key"
-        class="flex items-center gap-4 border-b border-white/[0.04] px-4 py-3.5 last:border-b-0"
+        class="flex items-center gap-4 border-b border-edge-faint px-4 py-3.5 last:border-b-0"
       >
-        <div class="h-3 w-1/4 rounded bg-white/[0.06]" />
-        <div class="h-3 w-1/5 rounded bg-white/[0.06]" />
-        <div class="h-3 w-1/6 rounded bg-white/[0.06]" />
-        <div class="ml-auto h-5 w-14 rounded-full bg-white/[0.08]" />
+        <div class="h-3 w-1/4 rounded bg-fill-2" />
+        <div class="h-3 w-1/5 rounded bg-fill-2" />
+        <div class="h-3 w-1/6 rounded bg-fill-2" />
+        <div class="ml-auto h-5 w-14 rounded-full bg-fill-2" />
       </div>
     </div>
 
@@ -69,11 +69,11 @@ const rowKeys = computed(() => Array.from({ length: props.rows }, (_, i) => i));
         :key="key"
         class="relative flex gap-3 pl-1"
       >
-        <div class="mt-1 h-3 w-3 shrink-0 rounded-full bg-white/[0.12]" />
-        <div class="glass flex-1 rounded-xl p-3">
-          <div class="mb-2 h-3 w-1/4 rounded bg-white/[0.08]" />
-          <div class="mb-1.5 h-3 w-full rounded bg-white/[0.05]" />
-          <div class="h-3 w-4/5 rounded bg-white/[0.05]" />
+        <div class="mt-1 h-3 w-3 shrink-0 rounded-full bg-fill-3" />
+        <div class="glass-inner flex-1 p-3">
+          <div class="mb-2 h-3 w-1/4 rounded bg-fill-2" />
+          <div class="mb-1.5 h-3 w-full rounded bg-fill-2" />
+          <div class="h-3 w-4/5 rounded bg-fill-2" />
         </div>
       </div>
     </div>

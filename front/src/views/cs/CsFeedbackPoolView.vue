@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router';
 import { FilePlus2, Loader2 } from 'lucide-vue-next';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GlassCard from '@/components/common/GlassCard.vue';
+import HudTabs from '@/components/common/HudTabs.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import { useFeedbackStore } from '@/stores/feedback';
@@ -88,23 +89,13 @@ onMounted(loadList);
     <main class="mx-auto w-full max-w-4xl px-4 py-6">
       <h1 class="mb-4 text-2xl font-semibold text-gray-100">异常反馈池</h1>
 
-      <!-- 筛选胶囊 -->
-      <div class="mb-5 flex flex-wrap gap-2">
-        <button
-          v-for="filter in FILTERS"
-          :key="filter.value"
-          type="button"
-          class="rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200"
-          :class="
-            feedbackStore.poolStatusFilter === filter.value
-              ? 'border-brand/60 bg-brand/10 text-brand shadow-neon'
-              : 'border-white/10 bg-white/[0.03] text-gray-400 hover:border-brand/30 hover:text-gray-200'
-          "
-          @click="changeFilter(filter.value)"
-        >
-          {{ filter.label }}
-        </button>
-      </div>
+      <!-- 状态筛选 Tabs（规范 §2.6） -->
+      <HudTabs
+        :items="FILTERS"
+        :model-value="feedbackStore.poolStatusFilter"
+        class="mb-5"
+        @update:model-value="changeFilter($event as FeedbackStatus)"
+      />
 
       <!-- 加载态 -->
       <LoadingSkeleton v-if="feedbackStore.loading.pool" type="card" :rows="4" />
@@ -143,18 +134,18 @@ onMounted(loadList);
             <div class="flex flex-wrap items-start gap-3">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="num text-sm font-medium text-gray-100">{{ feedback.waybillNo }}</span>
-                  <span class="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[11px] text-accent">
+                  <span class="num text-sm font-semibold text-gray-100">{{ feedback.waybillNo }}</span>
+                  <span class="rounded-full border border-brand/40 bg-brand/10 px-2 py-0.5 text-micro text-brand">
                     {{ EXCEPTION_TYPE_LABELS[feedback.type] }}
                   </span>
-                  <span class="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[11px] text-gray-400">
+                  <span class="rounded-full border border-edge-faint bg-fill-1 px-2 py-0.5 text-micro text-gray-400">
                     {{ FEEDBACK_STATUS_LABELS[feedback.status] }}
                   </span>
                 </div>
                 <p class="mt-2 line-clamp-2 text-sm leading-6 text-gray-300">
                   {{ truncate(feedback.description, 80) }}
                 </p>
-                <p class="num mt-1.5 text-[11px] text-gray-500">
+                <p class="num mt-1.5 text-micro text-gray-500">
                   提交时间：{{ formatDateTime(feedback.createdAt) }}
                 </p>
               </div>
@@ -162,7 +153,7 @@ onMounted(loadList);
               <!-- 仅待受理反馈可创建工单，其余禁用 -->
               <button
                 type="button"
-                class="btn-neon shrink-0 !px-3 !py-1.5 text-xs"
+                class="btn btn-sm btn-primary shrink-0"
                 :disabled="feedback.status !== 'PENDING_ACCEPT'"
                 :title="feedback.status !== 'PENDING_ACCEPT' ? '该反馈已处理' : '基于此反馈创建工单'"
                 @click="goCreate(feedback.id)"
@@ -179,7 +170,7 @@ onMounted(loadList);
           <button
             v-if="feedbackStore.poolHasMore"
             type="button"
-            class="btn-ghost"
+            class="btn btn-md btn-text"
             :disabled="loadingMore"
             @click="loadMore"
           >

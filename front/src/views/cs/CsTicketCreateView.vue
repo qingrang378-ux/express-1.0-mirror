@@ -5,8 +5,7 @@
  * 继承反馈异常类型（可修改）→ 选择优先级 → 按 SLA 预览处理期限 → 选择运营并分派。
  *
  * 接口：POST /cs/tickets 创建 → POST /cs/tickets/{id}/assign 分派（两步串行）。
- * 说明：运营候选人列表接口在冻结契约中缺失，当前以空数组 provisional 占位，
- *      后端补齐 GET 候选人接口后只需替换 loadAssignees()。
+ * 说明：运营候选人通过 provisional 接口 GET /cs/ops-staff 加载（见 API.md §11 修订提案）。
  */
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -25,6 +24,7 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import { useFeedbackStore } from '@/stores/feedback';
 import { useTicketStore } from '@/stores/ticket';
+import { getOpsAssignees } from '@/api/workorder';
 import {
   EXCEPTION_TYPE_LABELS,
   PRIORITY_LABELS,
@@ -66,18 +66,24 @@ const formError = ref('');
 
 /** 优先级选项（4 档胶囊） */
 const PRIORITY_OPTIONS: ReadonlyArray<{ value: Priority; tone: string }> = [
-  { value: 'LOW', tone: 'border-white/15 text-gray-300' },
+  { value: 'LOW', tone: 'border-edge text-gray-300' },
   { value: 'MEDIUM', tone: 'border-brand/40 text-brand' },
   { value: 'HIGH', tone: 'border-warn/40 text-warn' },
   { value: 'URGENT', tone: 'border-danger/50 text-danger' },
 ];
 
 /**
- * 运营候选人（provisional）
- * TODO: 后端补齐候选人查询接口后，在此请求并填充：
- *   const list = await getOpsAssignees(); assignees.value = list;
+ * 运营候选人（provisional：GET /cs/ops-staff，见 API.md §11 修订提案）
  */
 const assignees = ref<OpsAssignee[]>([]);
+
+async function loadAssignees(): Promise<void> {
+  try {
+    assignees.value = await getOpsAssignees();
+  } catch {
+    // 候选人接口失败不阻塞表单其余部分，拦截器已全局提示
+  }
+}
 
 /** SLA 预览：依据当前所选异常类型计算预计截止时间 */
 const deadlinePreview = computed(() =>
@@ -139,8 +145,9 @@ async function handleSubmit(): Promise<void> {
   }
 }
 
-/** 初始：加载关联反馈并预填异常类型 */
+/** 初始：加载关联反馈并预填异常类型；并行加载运营候选人 */
 onMounted(async () => {
+  void loadAssignees();
   if (!feedbackId) {
     feedbackStore.error = '缺少 feedbackId 参数，请从异常反馈池进入';
     return;
@@ -167,10 +174,10 @@ function goBack(): void {
     <main class="mx-auto w-full max-w-2xl px-4 py-6">
       <!-- 顶部 -->
       <div class="mb-5 flex items-center gap-3">
-        <button type="button" class="btn-ghost !px-2.5" @click="goBack">
+        <button type="button" class="btn btn-sm btn-text btn-icon" @click="goBack">
           <ArrowLeft :size="15" />
         </button>
-        <h1 class="text-lg font-semibold text-gray-100">创建工单</h1>
+        <h1 class="text-module font-semibold text-gray-100">创建工单</h1>
       </div>
 
       <!-- 反馈加载中 -->
@@ -189,13 +196,13 @@ function goBack(): void {
 
       <template v-else>
         <!-- 关联反馈卡 -->
-        <GlassCard glow padding="p-4" class="mb-4">
+        <GlassCard padding="p-4" class="mb-4">
           <template #header>
-            <span class="text-sm font-medium text-gray-200">关联异常反馈</span>
+            <span class="card-title">关联异常反馈</span>
           </template>
           <div class="flex flex-wrap items-center gap-2 text-xs">
             <span class="num text-gray-200">{{ feedback.waybillNo }}</span>
-            <span class="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent">
+            <span class="rounded-full border border-brand/40 bg-brand/10 px-2 py-0.5 text-brand">
               {{ EXCEPTION_TYPE_LABELS[feedback.type] }}
             </span>
           </div>
@@ -206,7 +213,7 @@ function goBack(): void {
           <form class="space-y-6" @submit.prevent="handleSubmit">
             <!-- 异常分类（继承反馈类型，可修改） -->
             <fieldset>
-              <legend class="mb-2.5 text-sm font-medium text-gray-200">
+              <legend class="mb-2.5 text-sm font-semibold text-gray-200">
                 异常分类 <span class="text-danger">*</span>
               </legend>
               <FeedbackTypeSelector
@@ -219,7 +226,7 @@ function goBack(): void {
 
             <!-- 优先级 -->
             <div>
-              <p class="mb-2.5 text-sm font-medium text-gray-200">
+              <p class="mb-2.5 text-sm font-semibold text-gray-200">
                 优先级 <span class="text-danger">*</span>
               </p>
               <div class="flex flex-wrap gap-2">
@@ -228,11 +235,11 @@ function goBack(): void {
                   :key="option.value"
                   type="button"
                   :disabled="ticketStore.submitting"
-                  class="rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  class="rounded-full border px-4 py-1.5 text-xs transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
                   :class="
                     form.priority === option.value
-                      ? `${option.tone} bg-white/[0.06] shadow-neon`
-                      : 'border-white/10 bg-white/[0.03] text-gray-400 hover:border-white/25'
+                      ? `${option.tone} bg-fill-2 shadow-neon`
+                      : 'border-edge-faint bg-fill-1 text-gray-400 hover:border-edge'
                   "
                   @click="selectPriority(option.value)"
                 >
@@ -259,7 +266,7 @@ function goBack(): void {
 
             <!-- 分派运营 -->
             <div>
-              <label for="assignee" class="mb-2.5 flex items-center gap-1.5 text-sm font-medium text-gray-200">
+              <label for="assignee" class="input-label mb-2 flex items-center gap-1.5">
                 <UserCog :size="14" />
                 分派给运营 <span class="text-danger">*</span>
               </label>
@@ -275,8 +282,8 @@ function goBack(): void {
                   {{ ops.realName }}（当前待办 {{ ops.todoCount }} 单）
                 </option>
               </select>
-              <p v-if="assignees.length === 0" class="mt-1.5 text-[11px] text-gray-500">
-                暂无可用运营人员：候选人列表接口待后端提供，接口就绪后此处自动加载。
+              <p v-if="assignees.length === 0" class="mt-1.5 text-micro text-gray-500">
+                暂无可用运营人员：候选人接口（GET /cs/ops-staff，v1.1 提案）未就绪或加载失败。
               </p>
               <p v-else-if="fieldErrors.assigneeId" class="mt-1.5 flex items-center gap-1 text-xs text-danger">
                 <CircleAlert :size="13" />
@@ -294,10 +301,10 @@ function goBack(): void {
             </p>
 
             <!-- 操作区 -->
-            <div class="flex items-center justify-end gap-3 border-t border-white/[0.06] pt-4">
+            <div class="flex items-center justify-end gap-3 border-t border-edge-faint pt-4">
               <button
                 type="button"
-                class="btn-ghost"
+                class="btn btn-md btn-text"
                 :disabled="ticketStore.submitting"
                 @click="goBack"
               >
@@ -305,7 +312,7 @@ function goBack(): void {
               </button>
               <button
                 type="submit"
-                class="btn-neon min-w-[148px]"
+                class="btn btn-lg btn-primary min-w-[148px]"
                 :disabled="!isFormValid || ticketStore.submitting"
               >
                 <Loader2 v-if="ticketStore.submitting" :size="15" class="animate-spin" />

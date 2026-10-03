@@ -9,6 +9,7 @@ import type {
   FeedbackStatus,
   NodeType,
   Priority,
+  StatusLog,
   TicketStatus,
   TimeoutStatus,
   WaybillStatus,
@@ -53,6 +54,18 @@ export const WAYBILL_STATUS_LABELS: Record<WaybillStatus, string> = {
   DELIVERING: '派送中',
   SIGNED: '已签收',
   EXCEPTION: '异常',
+};
+
+/**
+ * 运单状态标签配色（设计规范 §1.1 / §2.3：状态色严格绑定色值）
+ * 已签收=成功色无发光；异常=危险色恒定柔光（最高视觉权重）；运输/派送=主色淡发光。
+ */
+export const WAYBILL_STATUS_TONES: Record<WaybillStatus, string> = {
+  PICKED_UP: 'border-edge bg-fill-1 text-gray-300',
+  IN_TRANSIT: 'border-brand/30 bg-brand/10 text-brand shadow-neon',
+  DELIVERING: 'border-brand/30 bg-brand/10 text-brand shadow-neon',
+  SIGNED: 'border-success/40 bg-success/10 text-success',
+  EXCEPTION: 'border-danger/40 bg-danger/10 text-danger shadow-neon-danger',
 };
 
 /** 运输节点类型中文文案 */
@@ -127,4 +140,17 @@ export function truncate(text: string, maxLen = 40): string {
 /** 依据异常类型 SLA 计算预计处理期限（ISO 字符串），默认从当前时间起算 */
 export function computeDeadline(type: ExceptionType, from: number = Date.now()): string {
   return new Date(from + SLA_HOURS[type] * 60 * 60 * 1000).toISOString();
+}
+
+/** 状态流转留痕：变更文案（创建为「工单创建（待处理）」，其余「待处理 → 处理中」） */
+export function statusTransitionLabel(log: StatusLog): string {
+  return log.fromStatus
+    ? `${TICKET_STATUS_LABELS[log.fromStatus]} → ${TICKET_STATUS_LABELS[log.toStatus]}`
+    : `工单创建（${TICKET_STATUS_LABELS[log.toStatus]}）`;
+}
+
+/** 状态流转留痕：操作人文案（operatorRole 为 null 表示系统操作） */
+export function logOperatorLabel(log: StatusLog): string {
+  const role = log.operatorRole ? ROLE_LABELS[log.operatorRole] : '系统';
+  return `${role} #${log.operatorId}`;
 }

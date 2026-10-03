@@ -67,13 +67,17 @@ const display = computed<string>(() => {
 const tone = computed(() => {
   if (isOverdue.value) {
     return {
-      box: 'border-danger/50 bg-danger/10 text-danger animate-pulse-danger',
+      box: 'border-danger/50 bg-danger/10 text-danger shadow-neon-danger',
       icon: AlarmClock,
       label: '已超时',
     };
   }
   if (isWarning.value) {
-    return { box: 'border-warn/40 bg-warn/10 text-warn', icon: Hourglass, label: '剩余' };
+    return {
+      box: 'border-warn/40 bg-warn/10 text-warn animate-breathe-warn',
+      icon: Hourglass,
+      label: '剩余',
+    };
   }
   return { box: 'border-brand/30 bg-brand/[0.07] text-brand', icon: Timer, label: '剩余' };
 });
@@ -81,7 +85,7 @@ const tone = computed(() => {
 
 <template>
   <span
-    class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium"
+    class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs"
     :class="tone.box"
     :title="`截止时间：${deadlineAt}`"
   >

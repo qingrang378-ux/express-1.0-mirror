@@ -167,10 +167,9 @@ export const useTicketStore = defineStore('ticket', () => {
     }
   }
 
-  /** 客户确认处理结果（工单须为 PENDING_CUSTOMER_CONFIRM） */
-  function confirmCustomerTicket(id: number, _remark?: string): Promise<void> {
-    // remark 为冻结入参 ConfirmTicketRequest 的预留字段，当前接口按 id 确认
-    return withSubmitting(() => confirmTicket(id));
+  /** 客户确认处理结果（工单须为 PENDING_CUSTOMER_CONFIRM），remark 存为客户可见沟通记录 */
+  function confirmCustomerTicket(id: number, remark?: string): Promise<void> {
+    return withSubmitting(() => confirmTicket(id, remark));
   }
 
   /** 客户不认可、申请继续处理（工单须为 PENDING_CUSTOMER_CONFIRM） */

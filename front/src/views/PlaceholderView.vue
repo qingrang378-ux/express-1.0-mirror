@@ -19,10 +19,10 @@ defineProps<Props>();
 
 <template>
   <div class="mx-auto w-full max-w-3xl px-4 py-20">
-    <GlassCard glow padding="p-8">
+    <GlassCard padding="p-8">
       <template #header>
-        <span class="text-sm font-medium text-gray-300">{{ title || '页面建设中' }}</span>
-        <span class="num rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[11px] text-brand">
+        <span class="card-title">{{ title || '页面建设中' }}</span>
+        <span class="num rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-micro text-brand">
           PHASE 2
         </span>
       </template>

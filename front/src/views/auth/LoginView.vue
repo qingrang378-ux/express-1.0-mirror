@@ -2,6 +2,9 @@
 /**
  * @file LoginView.vue
  * 文件作用：统一登录页（客户 / 客服 / 运营三角色共用入口）。
+ * 布局：左侧为透明底线稿插图（快递员 + 包裹 + 沿配送链路流转的异常节点），
+ * 右侧登录卡片向左压住插图右缘、插图右端渐隐，两者构成同一画面而非并排两个盒子；
+ * 窄屏隐藏插图与能力胶囊，只留品牌、一句话说明和登录卡片，保证表单落在首屏内。
  * 流程：表单校验 → 调用登录接口 → 成功后经 Pinia(auth store) 持久化 token 与
  * 用户信息 → 按 redirect 查询参数回跳，缺省回当前角色首页。
  * 失败由 apiClient 响应拦截器统一 toast，此处只兜底禁用按钮与提示。
@@ -13,6 +16,7 @@ import { ref, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Loader2, Lock, PackageCheck, User } from 'lucide-vue-next';
 import GlassCard from '@/components/common/GlassCard.vue';
+import heroIllustration from '@/assets/images/login-hero-lineart.png';
 import { login as loginApi } from '@/api/auth';
 import { useAuthStore } from '@/stores/auth';
 import { notify } from '@/utils/notify';
@@ -28,6 +32,14 @@ const ROLE_HOME: Record<LoginRole, string> = {
   CS: '/cs/tickets',
   OPS: '/ops/tickets',
 };
+
+/** 左栏能力说明胶囊：让首次到访者一眼看懂系统用途 */
+const STEP_CHIPS: readonly string[] = [
+  '异常反馈一键上报',
+  '自动转工单并分派',
+  'SLA 时限与超时提醒',
+  '处理进度实时可查',
+];
 
 /** 表单状态 */
 const form = reactive({
@@ -80,39 +92,61 @@ function onEnter(): void {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen items-center justify-center px-4 py-10">
-    <!-- 背景光斑 -->
-    <div
-      class="pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand/10 blur-3xl"
-    />
+  <div class="relative flex min-h-screen items-center justify-center px-4 py-6 lg:py-10">
+    <div class="relative grid w-full max-w-5xl items-center gap-6 lg:grid-cols-[1.05fr_minmax(0,400px)] lg:gap-0">
+      <!-- 左栏：品牌 + 线稿插图（透明底图，直接铺在页面底色上）；窄屏隐藏插图与能力胶囊，
+           并把品牌区随卡片一起居中，避免单栏时文案贴左、卡片居右的错位感 -->
+      <div class="flex flex-col">
+        <div class="flex items-center justify-center gap-3 lg:justify-start">
+          <span
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-brand/40 bg-brand/10 text-brand shadow-neon"
+          >
+            <PackageCheck :size="26" :stroke-width="2" />
+          </span>
+          <div>
+            <h1 class="text-page font-semibold tracking-wide text-gray-100">快递异常处理系统</h1>
+            <p class="num text-micro uppercase tracking-[0.25em] text-brand/70">Express Exception</p>
+          </div>
+        </div>
 
-    <div class="relative w-full max-w-md">
-      <!-- 品牌区 -->
-      <div class="mb-6 flex flex-col items-center gap-2 text-center">
-        <span
-          class="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand/40 bg-brand/10 text-brand shadow-neon"
-        >
-          <PackageCheck :size="26" :stroke-width="2" />
-        </span>
-        <h1 class="text-xl font-semibold tracking-wide text-gray-100">快递异常处理系统</h1>
-        <p class="num text-[11px] uppercase tracking-[0.25em] text-brand/70">Express Exception</p>
+        <p class="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-gray-400 lg:mx-0 lg:text-left">
+          遇到丢件、破损、延误、错发？提交异常反馈即自动生成工单，客服与运营协同处理直到办结。
+        </p>
+
+        <img
+          :src="heroIllustration"
+          width="1024"
+          height="730"
+          alt="线稿示意：快递员扫描包裹，异常节点沿配送链路流转并被逐一确认解决"
+          class="hero-art mt-1.5 hidden w-full max-w-[560px] self-center lg:block"
+        />
+
+        <ul class="mt-4 hidden flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-400 lg:flex">
+          <li v-for="chip in STEP_CHIPS" :key="chip" class="flex items-center gap-1.5">
+            <span class="h-1 w-1 shrink-0 rounded-full bg-brand" />
+            {{ chip }}
+          </li>
+        </ul>
       </div>
 
-      <!-- 登录卡片 -->
-      <GlassCard glow padding="p-7">
+      <!-- 右栏：登录卡片，向左压住插图右缘，与插图同处一个构图 -->
+      <GlassCard
+        padding="p-6 lg:p-7"
+        class="relative z-10 mx-auto w-full max-w-[400px] lg:-ml-24"
+      >
         <template #header>
-          <span class="text-sm font-medium text-gray-300">账号登录</span>
+          <span class="card-title">账号登录</span>
           <span
-            class="num rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[11px] text-accent"
+            class="num rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-micro text-brand"
           >
             三角色统一入口
           </span>
         </template>
 
-        <form class="flex flex-col gap-4" @submit.prevent="handleLogin">
+        <form class="flex flex-col gap-5" @submit.prevent="handleLogin">
           <!-- 用户名 -->
           <label class="flex flex-col gap-1.5">
-            <span class="text-xs text-gray-400">用户名</span>
+            <span class="input-label">用户名</span>
             <div class="relative">
               <User
                 :size="16"
@@ -132,7 +166,7 @@ function onEnter(): void {
 
           <!-- 密码 -->
           <label class="flex flex-col gap-1.5">
-            <span class="text-xs text-gray-400">密码</span>
+            <span class="input-label">密码</span>
             <div class="relative">
               <Lock
                 :size="16"
@@ -153,29 +187,30 @@ function onEnter(): void {
           <!-- 登录按钮 -->
           <button
             type="submit"
-            class="btn-neon mt-2 w-full !py-2.5"
+            class="btn btn-lg btn-primary w-full"
             :disabled="submitting"
           >
             <Loader2 v-if="submitting" :size="16" class="animate-spin" />
             <span>{{ submitting ? '登录中…' : '登录' }}</span>
           </button>
         </form>
-
-        <!-- 提示 -->
-        <div class="mt-5 border-t border-white/[0.06] pt-4 text-center text-[11px] leading-relaxed text-gray-500">
-          <p>
-            登录接口 <code class="num text-brand/80">POST /api/v1/auth/login</code>
-            为预留契约，角色由后端下发。
-          </p>
-          <p class="mt-2">
-            开发联调账号：
-            <code class="num text-gray-300">customer01</code> /
-            <code class="num text-gray-300">cs01</code> /
-            <code class="num text-gray-300">ops01</code>
-            ，密码均为 <code class="num text-gray-300">123456</code>
-          </p>
-        </div>
       </GlassCard>
     </div>
   </div>
 </template>
+
+<style scoped>
+/**
+ * 插图右缘渐隐：虚线配送链路淡出到页面底色，视觉上「走进」右侧登录卡片，
+ * 避免图片与卡片之间出现硬边界
+ */
+.hero-art {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000 0 68%,
+    rgba(0, 0, 0, 0.35) 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(90deg, #000 0 68%, rgba(0, 0, 0, 0.35) 90%, transparent 100%);
+}
+</style>

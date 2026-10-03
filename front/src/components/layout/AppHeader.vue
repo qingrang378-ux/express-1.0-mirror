@@ -49,13 +49,13 @@ function handleLogout(): void {
       @click="goHome"
     >
       <span
-        class="flex h-9 w-9 items-center justify-center rounded-xl border border-brand/40 bg-brand/10 text-brand shadow-neon transition-all duration-200 group-hover:shadow-neon-hover"
+        class="flex h-9 w-9 items-center justify-center rounded-xl border border-brand/40 bg-brand/10 text-brand transition-all duration-200 group-hover:border-edge-strong"
       >
         <PackageCheck :size="20" :stroke-width="2" />
       </span>
       <span class="hidden flex-col items-start leading-tight sm:flex">
         <span class="text-sm font-semibold tracking-wide text-gray-100">快递异常处理系统</span>
-        <span class="num text-[10px] uppercase tracking-[0.2em] text-brand/70">
+        <span class="num text-micro uppercase tracking-[0.2em] text-brand/70">
           Express Exception
         </span>
       </span>
@@ -67,7 +67,7 @@ function handleLogout(): void {
       <RouterLink
         v-if="auth.isCustomer"
         to="/customer/tickets"
-        class="btn-ghost !px-3 !py-1.5 text-xs"
+        class="btn btn-sm btn-text"
       >
         <Ticket :size="14" />
         <span class="hidden sm:inline">我的工单</span>
@@ -75,19 +75,19 @@ function handleLogout(): void {
 
       <!-- 用户芯片 -->
       <div
-        class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] py-1 pl-2 pr-3"
+        class="flex items-center gap-2 rounded-xl border border-edge-faint bg-fill-1 py-1 pl-2 pr-3"
       >
         <CircleUser :size="20" class="text-brand" />
         <span class="hidden text-xs text-gray-400 sm:inline">
           <span class="mr-1.5 text-gray-200">{{ auth.displayName || '未登录' }}</span>
-          <span class="rounded-md border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
+          <span class="rounded-md border border-brand/30 bg-brand/10 px-1.5 py-0.5 text-micro text-brand">
             {{ roleText }}
           </span>
         </span>
       </div>
 
       <!-- 登出 -->
-      <button type="button" class="btn-ghost !px-2.5 !py-2" title="退出登录" @click="handleLogout">
+      <button type="button" class="btn btn-sm btn-text btn-icon" title="退出登录" @click="handleLogout">
         <LogOut :size="15" />
       </button>
     </div>

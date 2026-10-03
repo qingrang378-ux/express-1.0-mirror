@@ -2,7 +2,8 @@
 /**
  * @file CustomerTicketDetailView.vue
  * 文件作用：客户工单详情页（/customer/tickets/:id）。
- * 查看公开进度与客服对外反馈，并在 PENDING_CUSTOMER_CONFIRM 时确认结果或申请继续处理。
+ * 顶部「处理进度」流程图实时标出当前环节，下方查看公开进度与客服对外反馈，
+ * 并在 PENDING_CUSTOMER_CONFIRM 时确认结果或申请继续处理。
  *
  * 安全红线：本页只渲染 CUSTOMER_VISIBLE 记录，即使后端误返回内部记录也在前端二次过滤，
  * 绝不渲染任何 INTERNAL_ONLY 内容。
@@ -21,6 +22,7 @@ import GlassCard from '@/components/common/GlassCard.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import TimeoutBadge from '@/components/common/TimeoutBadge.vue';
 import CountdownTimer from '@/components/common/CountdownTimer.vue';
+import TicketFlowDiagram from '@/components/common/TicketFlowDiagram.vue';
 import TimelineList from '@/components/common/TimelineList.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
@@ -131,15 +133,15 @@ function goBack(): void {
     <main class="mx-auto w-full max-w-3xl px-4 py-6">
       <!-- 顶部 -->
       <div class="mb-5 flex flex-wrap items-center gap-3">
-        <button type="button" class="btn-ghost !px-2.5" @click="goBack">
+        <button type="button" class="btn btn-sm btn-text btn-icon" @click="goBack">
           <ArrowLeft :size="15" />
         </button>
         <template v-if="ticket">
-          <h1 class="num text-lg font-semibold text-gray-100">{{ ticket.ticketNo }}</h1>
+          <h1 class="num text-module font-semibold text-gray-100">{{ ticket.ticketNo }}</h1>
           <StatusBadge :status="ticket.status" />
           <TimeoutBadge :timeout-status="ticket.timeoutStatus" />
         </template>
-        <h1 v-else class="text-lg font-semibold text-gray-100">工单进度</h1>
+        <h1 v-else class="text-module font-semibold text-gray-100">工单进度</h1>
       </div>
 
       <!-- 加载态 -->
@@ -157,8 +159,15 @@ function goBack(): void {
       </GlassCard>
 
       <template v-else-if="ticket">
+        <!-- 处理状态流程图：当前环节实时高亮，一眼看清进度 -->
+        <TicketFlowDiagram
+          :status="ticket.status"
+          :timeout-status="ticket.timeoutStatus"
+          class="mb-4"
+        />
+
         <!-- 处理时限卡 -->
-        <GlassCard glow padding="p-4" class="mb-4">
+        <GlassCard padding="p-4" class="mb-4">
           <div class="flex flex-wrap items-center gap-3">
             <span class="text-sm text-gray-300">异常类型：
               <span class="text-brand">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</span>
@@ -171,9 +180,9 @@ function goBack(): void {
         </GlassCard>
 
         <!-- 对外反馈卡（客服确认的对外说明，霓虹描边突出） -->
-        <GlassCard padding="p-5" class="mb-4 !border-brand/30" :glow="publicFeedbacks.length > 0">
+        <GlassCard padding="p-5" class="mb-4 !border-brand/30">
           <template #header>
-            <span class="flex items-center gap-1.5 text-sm font-medium text-gray-200">
+            <span class="card-title">
               <ShieldCheck :size="15" class="text-brand" />
               客服对外反馈
             </span>
@@ -187,22 +196,22 @@ function goBack(): void {
             <li
               v-for="feedback in publicFeedbacks"
               :key="feedback.id"
-              class="rounded-xl border border-brand/20 bg-brand/[0.06] p-3"
+              class="glass-inner p-3"
             >
               <p class="whitespace-pre-wrap break-words text-sm leading-6 text-gray-200">
                 {{ feedback.content }}
               </p>
-              <p class="num mt-2 text-[11px] text-gray-500">{{ formatDateTime(feedback.createdAt) }}</p>
+              <p class="num mt-2 text-micro text-gray-500">{{ formatDateTime(feedback.createdAt) }}</p>
             </li>
           </ul>
         </GlassCard>
 
-        <!-- 公开进度时间线（只渲染 CUSTOMER_VISIBLE） -->
+        <!-- 公开沟通记录（只渲染 CUSTOMER_VISIBLE） -->
         <GlassCard padding="p-5">
           <template #header>
-            <span class="flex items-center gap-1.5 text-sm font-medium text-gray-200">
+            <span class="card-title">
               <MessageSquareText :size="15" class="text-gray-400" />
-              处理进度
+              沟通记录
             </span>
           </template>
           <TimelineList
@@ -222,12 +231,12 @@ function goBack(): void {
       <span class="mr-auto hidden text-xs text-gray-400 sm:inline">
         请确认客服的处理结果，如不认可可申请继续处理
       </span>
-      <button type="button" class="btn-ghost" @click="openReject">
+      <button type="button" class="btn btn-md btn-text" @click="openReject">
         不认可并申请继续处理
       </button>
       <button
         type="button"
-        class="btn-neon"
+        class="btn btn-md btn-success"
         :disabled="ticketStore.submitting"
         @click="openConfirm"
       >
@@ -257,8 +266,8 @@ function goBack(): void {
           role="dialog"
           aria-modal="true"
         >
-          <div class="absolute inset-0 bg-ink-900/70 backdrop-blur-sm" @click="!ticketStore.submitting && (rejectVisible = false)" />
-          <div class="glass animate-dialog-in relative w-full max-w-lg rounded-2xl p-6 shadow-neon">
+          <div class="absolute inset-0 bg-overlay backdrop-blur-sm" @click="!ticketStore.submitting && (rejectVisible = false)" />
+          <div class="modal-hud animate-dialog-in w-full max-w-lg p-6">
             <h3 class="text-base font-semibold text-gray-100">不认可并申请继续处理</h3>
             <p class="mt-1.5 text-xs text-gray-500">请说明不认可的原因（{{ REASON_MIN }}~{{ REASON_MAX }} 字），工单将退回重新处理</p>
 
@@ -277,13 +286,13 @@ function goBack(): void {
                 {{ rejectError }}
               </p>
               <span v-else />
-              <span class="num text-[11px] text-gray-500">{{ rejectForm.reason.length }} / {{ REASON_MAX }}</span>
+              <span class="num text-micro text-gray-500">{{ rejectForm.reason.length }} / {{ REASON_MAX }}</span>
             </div>
 
             <div class="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                class="btn-ghost"
+                class="btn btn-md btn-text"
                 :disabled="ticketStore.submitting"
                 @click="rejectVisible = false"
               >
@@ -291,7 +300,7 @@ function goBack(): void {
               </button>
               <button
                 type="button"
-                class="btn-danger"
+                class="btn btn-md btn-danger"
                 :disabled="ticketStore.submitting"
                 @click="handleReject"
               >

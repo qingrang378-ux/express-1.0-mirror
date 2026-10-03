@@ -14,7 +14,7 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import { useWaybillStore } from '@/stores/waybill';
 import { useTicketStore } from '@/stores/ticket';
-import { WAYBILL_STATUS_LABELS, formatDateTime } from '@/utils/display';
+import { WAYBILL_STATUS_LABELS, WAYBILL_STATUS_TONES, formatDateTime } from '@/utils/display';
 
 const router = useRouter();
 const waybillStore = useWaybillStore();
@@ -83,7 +83,7 @@ onMounted(() => {
         <!-- 左侧：搜索 + 最近运单 -->
         <div class="space-y-5">
           <!-- 搜索卡 -->
-          <GlassCard glow padding="p-5">
+          <GlassCard padding="p-5">
             <form class="flex flex-col gap-3 sm:flex-row" @submit.prevent="handleSearch">
               <div class="relative flex-1">
                 <Search
@@ -99,7 +99,7 @@ onMounted(() => {
                   @keyup.enter="handleSearch"
                 />
               </div>
-              <button type="submit" class="btn-neon sm:min-w-[112px]" :disabled="!canSearch">
+              <button type="submit" class="btn btn-md btn-primary sm:min-w-[112px]" :disabled="!canSearch">
                 <Loader2 v-if="searching" :size="15" class="animate-spin" />
                 <Search v-else :size="15" />
                 {{ searching ? '查询中...' : '查询' }}
@@ -110,7 +110,7 @@ onMounted(() => {
           <!-- 最近运单列表 -->
           <GlassCard padding="p-5">
             <template #header>
-              <span class="text-sm font-medium text-gray-200">最近运单</span>
+              <span class="card-title">最近运单</span>
             </template>
 
             <!-- 加载态 -->
@@ -138,21 +138,17 @@ onMounted(() => {
               <li v-for="item in waybillStore.waybillList" :key="item.id">
                 <button
                   type="button"
-                  class="glass glass-hover group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left"
+                  class="glass-inner glass-hover group flex w-full items-center gap-3 px-4 py-3 text-left"
                   @click="goDetail(item.waybillNo)"
                 >
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
-                      <span class="num truncate text-sm font-medium text-gray-100">
+                      <span class="num truncate text-sm font-semibold text-gray-100">
                         {{ item.waybillNo }}
                       </span>
                       <span
-                        class="shrink-0 rounded-full border px-2 py-0.5 text-[11px]"
-                        :class="
-                          item.status === 'EXCEPTION'
-                            ? 'border-danger/40 bg-danger/10 text-danger'
-                            : 'border-brand/30 bg-brand/10 text-brand'
-                        "
+                        class="shrink-0 rounded-full border px-2 py-0.5 text-micro"
+                        :class="WAYBILL_STATUS_TONES[item.status]"
                       >
                         {{ WAYBILL_STATUS_LABELS[item.status] }}
                       </span>
@@ -163,7 +159,7 @@ onMounted(() => {
                       {{ item.receiverCity }}
                     </p>
                   </div>
-                  <span class="num shrink-0 text-[11px] text-gray-500">
+                  <span class="num shrink-0 text-micro text-gray-500">
                     {{ formatDateTime(item.updatedAt) }}
                   </span>
                 </button>
@@ -176,16 +172,20 @@ onMounted(() => {
         <aside class="space-y-4">
           <!-- 我的工单 -->
           <RouterLink to="/customer/tickets" class="block">
-            <GlassCard glow padding="p-4" class="glass-hover h-full">
+            <GlassCard padding="p-4" class="glass-hover h-full">
               <div class="flex items-center gap-3">
                 <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-brand/40 bg-brand/10 text-brand">
                   <Ticket :size="18" />
                 </span>
                 <div class="flex-1">
-                  <p class="text-sm font-medium text-gray-200">我的工单</p>
+                  <p class="text-sm font-semibold text-gray-200">我的工单</p>
                   <p class="text-xs text-gray-500">
                     待确认
-                    <span class="num text-brand">{{ pendingConfirmCount }}</span> 单
+                    <span
+                      class="num rounded px-1"
+                      :class="pendingConfirmCount > 0 ? 'text-warn animate-breathe-warn' : 'text-brand'"
+                    >{{ pendingConfirmCount }}</span>
+                    单
                   </p>
                 </div>
                 <ArrowRight :size="16" class="text-gray-500" />
@@ -197,11 +197,11 @@ onMounted(() => {
           <RouterLink to="/customer/tickets" class="block">
             <GlassCard padding="p-4" class="glass-hover h-full">
               <div class="flex items-center gap-3">
-                <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/40 bg-accent/10 text-accent">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-brand/40 bg-brand/10 text-brand">
                   <Search :size="18" />
                 </span>
                 <div class="flex-1">
-                  <p class="text-sm font-medium text-gray-200">异常反馈</p>
+                  <p class="text-sm font-semibold text-gray-200">异常反馈</p>
                   <p class="text-xs text-gray-500">查看反馈处理进度</p>
                 </div>
                 <ArrowRight :size="16" class="text-gray-500" />
@@ -220,13 +220,13 @@ onMounted(() => {
                 :class="
                   overdueCount > 0
                     ? 'border-danger/40 bg-danger/10 text-danger'
-                    : 'border-white/10 bg-white/[0.04] text-gray-500'
+                    : 'border-edge-faint bg-fill-2 text-gray-500'
                 "
               >
                 <AlarmClock :size="18" />
               </span>
               <div class="flex-1">
-                <p class="text-sm font-medium text-gray-200">超时提醒</p>
+                <p class="text-sm font-semibold text-gray-200">超时提醒</p>
                 <p class="text-xs text-gray-500">
                   已超时
                   <span class="num" :class="overdueCount > 0 ? 'text-danger' : 'text-gray-400'">

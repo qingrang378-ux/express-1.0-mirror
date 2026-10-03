@@ -59,7 +59,7 @@ function select(value: ExceptionType): void {
         :class="[
           modelValue === option.value
             ? 'border-brand/60 bg-brand/10 text-brand shadow-neon'
-            : 'border-white/10 bg-white/[0.03] text-gray-300 hover:border-brand/30 hover:text-white',
+            : 'border-edge-faint bg-fill-1 text-gray-300 hover:border-brand/30 hover:text-gray-100',
           disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
         ]"
         @click="select(option.value)"
@@ -70,8 +70,8 @@ function select(value: ExceptionType): void {
           :stroke-width="2"
           :class="modelValue === option.value ? 'text-brand' : 'text-gray-400 group-hover:text-brand'"
         />
-        <span class="text-sm font-medium">{{ option.label }}</span>
-        <span class="text-[11px] leading-4 text-gray-500">{{ option.hint }}</span>
+        <span class="text-sm font-semibold">{{ option.label }}</span>
+        <span class="text-micro leading-4 text-gray-500">{{ option.hint }}</span>
       </button>
     </div>
 

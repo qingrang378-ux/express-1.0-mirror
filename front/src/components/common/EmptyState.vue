@@ -36,7 +36,7 @@ const emit = defineEmits<{
       :class="
         props.danger
           ? 'border-danger/30 bg-danger/10 text-danger shadow-neon-danger'
-          : 'border-white/10 bg-white/[0.04] text-gray-500'
+          : 'border-edge-faint bg-fill-2 text-gray-500'
       "
     >
       <slot name="icon">
@@ -44,7 +44,7 @@ const emit = defineEmits<{
       </slot>
     </div>
 
-    <p class="text-sm font-medium" :class="props.danger ? 'text-danger' : 'text-gray-300'">
+    <p class="text-sm font-semibold" :class="props.danger ? 'text-danger' : 'text-gray-300'">
       {{ title }}
     </p>
     <p v-if="description" class="max-w-sm text-xs leading-5 text-gray-500">{{ description }}</p>
@@ -52,7 +52,7 @@ const emit = defineEmits<{
     <button
       v-if="actionText"
       type="button"
-      class="btn-neon mt-2"
+      class="btn btn-md btn-primary mt-2"
       @click="emit('action')"
     >
       {{ actionText }}

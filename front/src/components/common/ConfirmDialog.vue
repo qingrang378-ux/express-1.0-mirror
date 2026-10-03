@@ -95,14 +95,12 @@ onBeforeUnmount(() => {
       >
         <!-- 遮罩 -->
         <div
-          class="absolute inset-0 bg-ink-900/70 backdrop-blur-sm"
+          class="absolute inset-0 bg-overlay backdrop-blur-sm"
           @click="handleCancel"
         />
 
-        <!-- 弹窗主体 -->
-        <div
-          class="glass animate-dialog-in relative w-full max-w-md rounded-2xl p-6 shadow-neon"
-        >
+        <!-- 弹窗主体（规范 §2.7：双层半透明模糊 + 顶部青蓝发光细边） -->
+        <div class="modal-hud animate-dialog-in w-full max-w-md p-6">
           <div class="flex items-start gap-3">
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border"
@@ -125,7 +123,7 @@ onBeforeUnmount(() => {
           <div class="mt-6 flex items-center justify-end gap-2">
             <button
               type="button"
-              class="btn-ghost"
+              class="btn btn-md btn-text"
               :disabled="loading"
               @click="handleCancel"
             >
@@ -133,7 +131,7 @@ onBeforeUnmount(() => {
             </button>
             <button
               type="button"
-              :class="danger ? 'btn-danger' : 'btn-neon'"
+              :class="danger ? 'btn btn-md btn-danger' : 'btn btn-md btn-primary'"
               :disabled="loading"
               @click="handleConfirm"
             >

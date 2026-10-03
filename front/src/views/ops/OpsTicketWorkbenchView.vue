@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router';
 import { Check, ChevronRight, Loader2 } from 'lucide-vue-next';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GlassCard from '@/components/common/GlassCard.vue';
+import HudTabs from '@/components/common/HudTabs.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import TimeoutBadge from '@/components/common/TimeoutBadge.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -48,10 +49,15 @@ const TIMEOUT_FILTERS: ReadonlyArray<{ value: TimeoutStatus | 'ALL'; label: stri
 
 const loadingMore = ref(false);
 
-/** 叠加超时筛选（状态筛选由 store 完成） */
+/**
+ * 叠加超时筛选（状态筛选由 store 完成）；
+ * 防御性二次过滤：即使后端误返回他人工单，也仅展示分派给本人（AC 4.1）。
+ */
 const filteredTickets = computed<InternalTicket[]>(() =>
   ticketStore.opsTickets.filter(
-    (t) => timeoutFilter.value === 'ALL' || t.timeoutStatus === timeoutFilter.value,
+    (t) =>
+      t.assigneeId === auth.userId &&
+      (timeoutFilter.value === 'ALL' || t.timeoutStatus === timeoutFilter.value),
   ),
 );
 
@@ -115,32 +121,24 @@ onMounted(async () => {
     <main class="mx-auto w-full max-w-4xl px-4 py-6">
       <div class="mb-1 flex items-center gap-2">
         <h1 class="text-2xl font-semibold text-gray-100">我的待办工单</h1>
-        <span v-if="auth.userId" class="num rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[11px] text-gray-400">
+        <span v-if="auth.userId" class="num rounded-full border border-edge-faint bg-fill-1 px-2 py-0.5 text-micro text-gray-400">
           运营 #{{ auth.userId }}
         </span>
       </div>
       <p class="mb-4 text-xs text-gray-500">列表仅包含分派给您本人的工单</p>
 
-      <!-- 筛选栏 -->
-      <div class="mb-5 flex flex-wrap items-center gap-2">
-        <button
-          v-for="filter in STATUS_FILTERS"
-          :key="filter.value"
-          type="button"
-          class="rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200"
-          :class="
-            ticketStore.statusFilter === filter.value
-              ? 'border-brand/60 bg-brand/10 text-brand shadow-neon'
-              : 'border-white/10 bg-white/[0.03] text-gray-400 hover:border-brand/30 hover:text-gray-200'
-          "
-          @click="changeStatus(filter.value as TicketStatus)"
-        >
-          {{ filter.label }}
-        </button>
+      <!-- 状态筛选 Tabs（规范 §2.6） -->
+      <HudTabs
+        :items="STATUS_FILTERS"
+        :model-value="ticketStore.statusFilter"
+        @update:model-value="changeStatus($event as TicketStatus)"
+      />
 
+      <!-- 次级筛选：时限 -->
+      <div class="mb-5 mt-4 flex flex-wrap items-center gap-2">
         <select
           v-model="timeoutFilter"
-          class="input-glass ml-auto !w-auto !py-1.5 text-xs"
+          class="input-glass !w-auto text-xs"
           aria-label="超时筛选"
         >
           <option v-for="option in TIMEOUT_FILTERS" :key="option.value" :value="option.value">
@@ -172,22 +170,21 @@ onMounted(async () => {
             v-for="ticket in filteredTickets"
             :key="ticket.id"
             padding="p-4"
-            :glow="ticket.timeoutStatus === 'OVERDUE'"
-            :class="ticket.timeoutStatus === 'OVERDUE' ? '!border-danger/40' : ''"
+            :class="ticket.timeoutStatus === 'OVERDUE' ? '!border-danger/40 shadow-neon-danger' : ''"
           >
             <div class="flex flex-wrap items-center gap-3">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="num text-sm font-medium text-gray-100">{{ ticket.ticketNo }}</span>
+                  <span class="num text-sm font-semibold text-gray-100">{{ ticket.ticketNo }}</span>
                   <StatusBadge :status="ticket.status" />
                   <TimeoutBadge :timeout-status="ticket.timeoutStatus" />
                 </div>
                 <p class="mt-1.5 text-xs text-gray-400">
-                  异常类型：<span class="text-accent">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</span>
+                  异常类型：<span class="text-brand">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</span>
                   <span class="mx-2 text-gray-600">|</span>
                   运单号：<span class="num">{{ ticket.waybillNo }}</span>
                 </p>
-                <p class="num mt-1 text-[11px] text-gray-500">
+                <p class="num mt-1 text-micro text-gray-500">
                   处理期限：{{ formatDateTime(ticket.deadlineAt) }}
                 </p>
               </div>
@@ -197,7 +194,7 @@ onMounted(async () => {
                 <button
                   v-if="ticket.status === 'PENDING'"
                   type="button"
-                  class="btn-neon !px-3 !py-1.5 text-xs"
+                  class="btn btn-sm btn-primary"
                   :disabled="ticketStore.submitting"
                   @click="acceptTarget = ticket"
                 >
@@ -206,7 +203,7 @@ onMounted(async () => {
                 </button>
                 <button
                   type="button"
-                  class="btn-ghost !px-3 !py-1.5 text-xs"
+                  class="btn btn-sm btn-text"
                   @click="goDetail(ticket.id)"
                 >
                   查看详情
@@ -222,7 +219,7 @@ onMounted(async () => {
           <button
             v-if="ticketStore.opsPage?.hasMore"
             type="button"
-            class="btn-ghost"
+            class="btn btn-md btn-text"
             :disabled="loadingMore"
             @click="loadMore"
           >

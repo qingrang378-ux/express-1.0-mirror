@@ -25,6 +25,7 @@ import { useWaybillStore } from '@/stores/waybill';
 import {
   NODE_TYPE_LABELS,
   WAYBILL_STATUS_LABELS,
+  WAYBILL_STATUS_TONES,
   formatDateTime,
   maskName,
   maskPhone,
@@ -110,23 +111,19 @@ function goFeedback(): void {
     <main class="mx-auto w-full max-w-4xl px-4 py-6">
       <!-- 顶部：返回 + 运单号 + 状态 -->
       <div class="mb-5 flex flex-wrap items-center gap-3">
-        <button type="button" class="btn-ghost !px-2.5" @click="goBack">
+        <button type="button" class="btn btn-sm btn-text btn-icon" @click="goBack">
           <ArrowLeft :size="15" />
         </button>
         <template v-if="detail">
-          <h1 class="num text-lg font-semibold text-gray-100">{{ detail.waybillNo }}</h1>
+          <h1 class="num text-module font-semibold text-gray-100">{{ detail.waybillNo }}</h1>
           <span
             class="rounded-full border px-2.5 py-0.5 text-xs"
-            :class="
-              detail.status === 'EXCEPTION'
-                ? 'border-danger/40 bg-danger/10 text-danger'
-                : 'border-brand/30 bg-brand/10 text-brand'
-            "
+            :class="WAYBILL_STATUS_TONES[detail.status]"
           >
             {{ WAYBILL_STATUS_LABELS[detail.status] }}
           </span>
         </template>
-        <h1 v-else class="text-lg font-semibold text-gray-100">运单详情</h1>
+        <h1 v-else class="text-module font-semibold text-gray-100">运单详情</h1>
       </div>
 
       <!-- 加载态 -->
@@ -145,14 +142,14 @@ function goFeedback(): void {
 
       <template v-else-if="detail">
         <!-- 运单信息卡 -->
-        <GlassCard glow padding="p-5" class="mb-5">
+        <GlassCard padding="p-5" class="mb-5">
           <template #header>
-            <span class="text-sm font-medium text-gray-200">运单信息</span>
+            <span class="card-title">运单信息</span>
           </template>
 
           <div class="grid gap-4 sm:grid-cols-2">
             <!-- 发件人 -->
-            <div class="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+            <div class="glass-inner p-4">
               <p class="mb-2 text-xs text-gray-500">发件人</p>
               <p class="text-sm text-gray-200">{{ maskName(detail.senderName) }}</p>
               <p class="num mt-1 flex items-center gap-1.5 text-xs text-gray-400">
@@ -166,7 +163,7 @@ function goFeedback(): void {
             </div>
 
             <!-- 收件人 -->
-            <div class="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
+            <div class="glass-inner p-4">
               <p class="mb-2 text-xs text-gray-500">收件人</p>
               <p class="text-sm text-gray-200">{{ maskName(detail.receiverName) }}</p>
               <p class="num mt-1 flex items-center gap-1.5 text-xs text-gray-400">
@@ -180,7 +177,7 @@ function goFeedback(): void {
             </div>
           </div>
 
-          <div class="num mt-4 flex flex-wrap gap-x-6 gap-y-1 border-t border-white/[0.06] pt-3 text-xs text-gray-500">
+          <div class="num mt-4 flex flex-wrap gap-x-6 gap-y-1 border-t border-edge-faint pt-3 text-xs text-gray-500">
             <span>创建时间：{{ formatDateTime(detail.createdAt) }}</span>
             <span>更新时间：{{ formatDateTime(detail.updatedAt) }}</span>
           </div>
@@ -189,7 +186,7 @@ function goFeedback(): void {
         <!-- 轨迹时间线 -->
         <GlassCard padding="p-5">
           <template #header>
-            <span class="text-sm font-medium text-gray-200">物流轨迹</span>
+            <span class="card-title">物流轨迹</span>
           </template>
 
           <EmptyState
@@ -200,7 +197,7 @@ function goFeedback(): void {
 
           <ol
             v-else
-            class="relative space-y-5 before:absolute before:left-[15px] before:top-2 before:h-[calc(100%-1.5rem)] before:w-px before:bg-gradient-to-b before:from-brand/40 before:to-white/10"
+            class="relative space-y-5 before:absolute before:left-[15px] before:top-2 before:h-[calc(100%-1.5rem)] before:w-px before:bg-gradient-to-b before:from-brand/40 before:to-edge-faint"
           >
             <li
               v-for="(item, index) in timeline"
@@ -213,25 +210,25 @@ function goFeedback(): void {
                 :class="
                   index === 0
                     ? 'border-brand/60 bg-brand/15 text-brand shadow-neon'
-                    : 'border-white/15 bg-white/[0.05] text-gray-400'
+                    : 'border-edge bg-fill-2 text-gray-400'
                 "
               >
                 <component :is="item.nodeType ? NODE_ICONS[item.nodeType] : MapPin" :size="15" />
               </span>
 
               <div
-                class="rounded-xl p-3"
-                :class="index === 0 ? 'glass border-brand/25 shadow-neon' : 'border border-white/[0.07] bg-white/[0.02]'"
+                class="glass-inner p-3"
+                :class="index === 0 ? 'border border-brand/25 shadow-neon' : ''"
               >
                 <div class="flex flex-wrap items-center gap-2 text-xs">
-                  <span v-if="item.nodeType" class="font-medium" :class="index === 0 ? 'text-brand' : 'text-gray-300'">
+                  <span v-if="item.nodeType" class="font-semibold" :class="index === 0 ? 'text-brand' : 'text-gray-300'">
                     {{ NODE_TYPE_LABELS[item.nodeType] }}
                   </span>
                   <span v-if="item.location" class="inline-flex items-center gap-1 text-gray-400">
                     <MapPin :size="11" />
                     {{ item.location }}
                   </span>
-                  <span v-if="index === 0" class="rounded-full border border-brand/30 bg-brand/10 px-1.5 py-px text-[10px] text-brand">
+                  <span v-if="index === 0" class="rounded-full border border-brand/30 bg-brand/10 px-1.5 py-px text-micro text-brand">
                     最新
                   </span>
                   <span class="num ml-auto text-gray-500">{{ formatDateTime(item.occurredAt) }}</span>
@@ -249,11 +246,11 @@ function goFeedback(): void {
       v-if="detail"
       class="glass fixed inset-x-0 bottom-0 z-30 flex items-center justify-end gap-3 rounded-none border-b-0 border-x-0 px-4 py-3 sm:px-6"
     >
-      <button type="button" class="btn-ghost" @click="goBack">
+      <button type="button" class="btn btn-md btn-text" @click="goBack">
         <ArrowLeft :size="15" />
         返回
       </button>
-      <button type="button" class="btn-neon" @click="goFeedback">
+      <button type="button" class="btn btn-md btn-primary" @click="goFeedback">
         提交异常反馈
         <ArrowRight :size="15" />
       </button>

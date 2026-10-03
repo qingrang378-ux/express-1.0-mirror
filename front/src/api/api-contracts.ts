@@ -1,6 +1,8 @@
 /**
  * @file api-contracts.ts
- * 文件作用：前端接口契约的【单一事实来源】，与 docs/API.md（Frozen 已冻结）逐字对齐。
+ * 文件作用：前端接口契约的【单一事实来源】，与 docs/API.md 对齐：
+ *   §1-§10 为冻结版；warningAt / StatusLog / feedbackId / OpsAssignee / 认证类型
+ *   对应 §11 v1.1 修订提案（provisional，已在 mock 落地，待后端冻结）。
  * 包含：统一响应结构 ApiResponse<T>、游标分页、全部枚举、全部实体 VO / DTO 类型、
  *       业务异常类与业务码。所有 API 请求模块、Pinia Store、公共组件均从此处导入类型。
  *
@@ -220,7 +222,10 @@ export interface CustomerTicket {
   waybillNo: string;
   type: ExceptionType;
   status: TicketStatus;
+  /** 处理期限（术语表 DeadlineAt） */
   deadlineAt: string;
+  /** 预警时间（术语表 WarningAt）：到达即进入 WARNING，v1.1 提案补充 */
+  warningAt: string;
   timeoutStatus: TimeoutStatus;
   /** 仅 CUSTOMER_VISIBLE */
   communications: Communication[];
@@ -232,9 +237,34 @@ export interface CustomerTicket {
   updatedAt: string;
 }
 
-/** 客户确认处理结果入参 */
+/**
+ * 状态变更日志（TicketStatusLog，术语表 + AC 11.1）
+ * 工单每次状态变更必须留痕：fromStatus（创建时为 null）、toStatus、操作人、原因、时间。
+ */
+export interface StatusLog {
+  id: number;
+  /** 变更前状态；工单创建为 null → PENDING */
+  fromStatus: TicketStatus | null;
+  toStatus: TicketStatus;
+  /** 操作人角色；系统自动操作时为 null */
+  operatorRole: CommunicationRole | null;
+  /** 操作人用户 id */
+  operatorId: number;
+  /** 变更原因（如客户不认可理由），可选 */
+  reason?: string;
+  /** ISO 格式 */
+  createdAt: string;
+}
+
+/** 术语对齐别名：领域术语表名称 TicketStatusLog */
+export type TicketStatusLog = StatusLog;
+
+/**
+ * 客户确认结果入参（API.md §5.1）
+ */
 export interface ConfirmTicketRequest {
   ticketId: number;
+  /** 确认备注，随确认动作保存为客户可见沟通记录 */
   remark?: string;
 }
 
@@ -275,9 +305,16 @@ export interface InternalTicket {
   type: ExceptionType;
   status: TicketStatus;
   priority: Priority;
+  /** 被分派运营（术语表 Assignee） */
   assigneeId: number;
+  /** 负责客服（术语表 Handler：创建/跟进该工单的客服，非运营） */
   handlerId: number;
+  /** 来源异常反馈 id（工单由反馈转化，反馈随之流转） */
+  feedbackId: number;
+  /** 处理期限（术语表 DeadlineAt） */
   deadlineAt: string;
+  /** 预警时间（术语表 WarningAt）：到达即进入 WARNING，v1.1 提案补充 */
+  warningAt: string;
   timeoutStatus: TimeoutStatus;
   /** 全部沟通记录 */
   communications: Communication[];
@@ -285,6 +322,8 @@ export interface InternalTicket {
   internalRecords: Communication[];
   /** 仅 CUSTOMER_VISIBLE 客户反馈记录（CustomerFeedbackRecord） */
   customerFeedbacks: Communication[];
+  /** 状态变更日志（AC 11.1 留痕），仅内部可见，v1.1 提案补充 */
+  statusLogs: StatusLog[];
   /** ISO 格式 */
   createdAt: string;
   /** ISO 格式 */
@@ -372,8 +411,8 @@ export interface LoginResult {
 
 /**
  * 运营分派候选人（provisional）
- * 阶段 3「客服创建并分派工单」页需要运营姓名 + 当前待办数，
- * 冻结版 API.md 尚未提供该查询接口，待后端补齐后由专门接口返回。
+ * 阶段 3「客服创建并分派工单」页需要运营姓名 + 当前待办数。
+ * v1.1 提案接口：GET /cs/ops-staff（见 docs/API.md §11 修订提案）。
  */
 export interface OpsAssignee {
   /** 运营用户 id（分派接口 assigneeId） */

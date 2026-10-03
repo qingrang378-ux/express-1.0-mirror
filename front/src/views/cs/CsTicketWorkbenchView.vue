@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router';
 import { Loader2, Search } from 'lucide-vue-next';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GlassCard from '@/components/common/GlassCard.vue';
+import HudTabs from '@/components/common/HudTabs.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import TimeoutBadge from '@/components/common/TimeoutBadge.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -107,29 +108,19 @@ onMounted(async () => {
     <main class="mx-auto w-full max-w-6xl px-4 py-6">
       <h1 class="mb-4 text-2xl font-semibold text-gray-100">工单工作台</h1>
 
-      <!-- 筛选栏 -->
+      <!-- 状态筛选 Tabs（规范 §2.6 / §3.2：顶部筛选 Tabs + 中部数据表格） -->
+      <HudTabs
+        :items="STATUS_FILTERS"
+        :model-value="ticketStore.statusFilter"
+        class="mb-4"
+        @update:model-value="changeStatus($event as TicketStatus | 'ALL')"
+      />
+
+      <!-- 次级筛选：时限 + 单号搜索 -->
       <div class="mb-4 flex flex-wrap items-center gap-2">
-        <button
-          v-for="filter in STATUS_FILTERS"
-          :key="filter.value"
-          type="button"
-          class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200"
-          :class="
-            ticketStore.statusFilter === filter.value
-              ? 'border-brand/60 bg-brand/10 text-brand shadow-neon'
-              : 'border-white/10 bg-white/[0.03] text-gray-400 hover:border-brand/30 hover:text-gray-200'
-          "
-          @click="changeStatus(filter.value as TicketStatus | 'ALL')"
-        >
-          {{ filter.label }}
-        </button>
-
-        <span class="mx-1 hidden h-4 w-px bg-white/10 sm:block" />
-
-        <!-- 超时筛选 -->
         <select
           v-model="timeoutFilter"
-          class="input-glass !w-auto !py-1.5 text-xs"
+          class="input-glass !w-auto text-xs"
           aria-label="超时筛选"
         >
           <option v-for="option in TIMEOUT_FILTERS" :key="option.value" :value="option.value">
@@ -143,7 +134,7 @@ onMounted(async () => {
           <input
             v-model="keyword"
             type="text"
-            class="input-glass !py-1.5 pl-8 text-xs"
+            class="input-glass pl-8 text-xs"
             placeholder="搜索工单号 / 运单号"
             aria-label="搜索工单号或运单号"
           />
@@ -163,42 +154,42 @@ onMounted(async () => {
         <EmptyState title="暂无工单" description="调整筛选条件，或等待异常反馈转成工单" />
       </GlassCard>
 
-      <!-- 成功态：高信息密度表格 -->
-      <GlassCard v-else padding="p-0">
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[860px] text-left text-sm">
+      <!-- 成功态：高信息密度表格（规范 §2.4 双层：卡片外层 glass + 内层表格区无描边） -->
+      <GlassCard v-else padding="p-2">
+        <div class="glass-inner overflow-x-auto rounded">
+          <table class="hud-table w-full min-w-[860px] text-left text-sm">
             <thead>
-              <tr class="border-b border-white/[0.08] text-xs text-gray-500">
-                <th class="px-4 py-3 font-medium">工单号</th>
-                <th class="px-4 py-3 font-medium">运单号</th>
-                <th class="px-4 py-3 font-medium">异常类型</th>
-                <th class="px-4 py-3 font-medium">状态</th>
-                <th class="px-4 py-3 font-medium">被分派运营</th>
-                <th class="px-4 py-3 font-medium">处理期限</th>
-                <th class="px-4 py-3 font-medium">超时状态</th>
-                <th class="px-4 py-3 text-right font-medium">操作</th>
+              <tr>
+                <th class="px-4 py-3">工单号</th>
+                <th class="px-4 py-3">运单号</th>
+                <th class="px-4 py-3">异常类型</th>
+                <th class="px-4 py-3">状态</th>
+                <th class="px-4 py-3">被分派运营</th>
+                <th class="px-4 py-3">处理期限</th>
+                <th class="px-4 py-3">超时状态</th>
+                <th class="px-4 py-3 text-right">操作</th>
               </tr>
             </thead>
             <tbody>
               <tr
                 v-for="ticket in filteredTickets"
                 :key="ticket.id"
-                class="border-b border-white/[0.04] transition-colors duration-200 last:border-b-0 hover:bg-white/[0.03]"
-                :class="ticket.timeoutStatus === 'OVERDUE' ? 'bg-danger/[0.03]' : ''"
+                :class="ticket.timeoutStatus === 'OVERDUE' ? 'bg-danger/[0.06]' : ''"
               >
                 <td class="num px-4 py-3 text-gray-100">{{ ticket.ticketNo }}</td>
                 <td class="num px-4 py-3 text-gray-400">{{ ticket.waybillNo }}</td>
                 <td class="px-4 py-3">
-                  <span class="text-accent">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</span>
+                  <span class="text-brand">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</span>
                 </td>
                 <td class="px-4 py-3"><StatusBadge :status="ticket.status" /></td>
                 <td class="num px-4 py-3 text-gray-400">#{{ ticket.assigneeId }}</td>
                 <td class="num px-4 py-3 text-xs text-gray-500">{{ formatDateTime(ticket.deadlineAt) }}</td>
                 <td class="px-4 py-3"><TimeoutBadge :timeout-status="ticket.timeoutStatus" /></td>
                 <td class="px-4 py-3 text-right">
+                  <!-- 操作列（规范 §2.5）：默认文字按钮，hover 显出边框光影 -->
                   <button
                     type="button"
-                    class="btn-neon !px-3 !py-1 text-xs"
+                    class="btn btn-sm btn-text"
                     @click="goDetail(ticket.id)"
                   >
                     查看详情
@@ -215,7 +206,7 @@ onMounted(async () => {
         <button
           v-if="ticketStore.csPage?.hasMore"
           type="button"
-          class="btn-ghost"
+          class="btn btn-md btn-text"
           :disabled="loadingMore"
           @click="loadMore"
         >

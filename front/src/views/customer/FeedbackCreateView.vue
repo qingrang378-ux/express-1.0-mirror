@@ -99,20 +99,20 @@ function handleCancel(): void {
     <main class="mx-auto w-full max-w-2xl px-4 py-6">
       <!-- 顶部 -->
       <div class="mb-5 flex items-center gap-3">
-        <button type="button" class="btn-ghost !px-2.5" @click="handleCancel">
+        <button type="button" class="btn btn-sm btn-text btn-icon" @click="handleCancel">
           <ArrowLeft :size="15" />
         </button>
         <div>
-          <h1 class="text-lg font-semibold text-gray-100">提交异常反馈</h1>
+          <h1 class="text-module font-semibold text-gray-100">提交异常反馈</h1>
           <p class="num text-xs text-gray-500">运单号：{{ waybillNo }}</p>
         </div>
       </div>
 
-      <GlassCard glow padding="p-6">
+      <GlassCard padding="p-6">
         <form class="space-y-6" @submit.prevent="handleSubmit">
           <!-- 异常类型 -->
           <fieldset>
-            <legend class="mb-2.5 flex items-center gap-1 text-sm font-medium text-gray-200">
+            <legend class="input-label mb-2 flex items-center gap-1">
               异常类型
               <span class="text-danger">*</span>
             </legend>
@@ -126,7 +126,7 @@ function handleCancel(): void {
 
           <!-- 异常描述 -->
           <div>
-            <label for="feedback-desc" class="mb-2.5 flex items-center gap-1 text-sm font-medium text-gray-200">
+            <label for="feedback-desc" class="input-label mb-2 flex items-center gap-1">
               异常描述
               <span class="text-danger">*</span>
             </label>
@@ -147,7 +147,7 @@ function handleCancel(): void {
               </p>
               <span v-else />
               <span
-                class="num text-[11px]"
+                class="num text-micro"
                 :class="charCount > DESCRIPTION_MAX ? 'text-danger' : 'text-gray-500'"
               >
                 {{ charCount }} / {{ DESCRIPTION_MAX }}
@@ -165,10 +165,10 @@ function handleCancel(): void {
           </p>
 
           <!-- 操作按钮 -->
-          <div class="flex items-center justify-end gap-3 border-t border-white/[0.06] pt-4">
+          <div class="flex items-center justify-end gap-3 border-t border-edge-faint pt-4">
             <button
               type="button"
-              class="btn-ghost"
+              class="btn btn-md btn-text"
               :disabled="feedbackStore.loading.submit"
               @click="handleCancel"
             >
@@ -176,7 +176,7 @@ function handleCancel(): void {
             </button>
             <button
               type="submit"
-              class="btn-neon min-w-[132px]"
+              class="btn btn-lg btn-primary min-w-[132px]"
               :disabled="!isFormValid || feedbackStore.loading.submit"
             >
               <Loader2 v-if="feedbackStore.loading.submit" :size="15" class="animate-spin" />

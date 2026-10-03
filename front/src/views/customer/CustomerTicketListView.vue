@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router';
 import { ChevronRight, Loader2 } from 'lucide-vue-next';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import GlassCard from '@/components/common/GlassCard.vue';
+import HudTabs from '@/components/common/HudTabs.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import TimeoutBadge from '@/components/common/TimeoutBadge.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -80,23 +81,13 @@ function goWaybills(): void {
     <main class="mx-auto w-full max-w-4xl px-4 py-6">
       <h1 class="mb-4 text-2xl font-semibold text-gray-100">我的工单</h1>
 
-      <!-- 状态筛选胶囊 -->
-      <div class="mb-5 flex flex-wrap gap-2">
-        <button
-          v-for="filter in FILTERS"
-          :key="filter.value"
-          type="button"
-          class="rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200"
-          :class="
-            ticketStore.statusFilter === filter.value
-              ? 'border-brand/60 bg-brand/10 text-brand shadow-neon'
-              : 'border-white/10 bg-white/[0.03] text-gray-400 hover:border-brand/30 hover:text-gray-200'
-          "
-          @click="changeFilter(filter.value as TicketStatus | 'ALL')"
-        >
-          {{ filter.label }}
-        </button>
-      </div>
+      <!-- 状态筛选 Tabs（规范 §2.6） -->
+      <HudTabs
+        :items="FILTERS"
+        :model-value="ticketStore.statusFilter"
+        class="mb-5"
+        @update:model-value="changeFilter($event as TicketStatusFilter)"
+      />
 
       <!-- 加载态 -->
       <LoadingSkeleton v-if="ticketStore.loading.customerList" type="card" :rows="4" />
@@ -129,13 +120,12 @@ function goWaybills(): void {
             v-for="ticket in ticketStore.customerTickets"
             :key="ticket.id"
             padding="p-4"
-            glow
             class="glass-hover"
           >
             <div class="flex flex-wrap items-center gap-3">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="num text-sm font-medium text-gray-100">{{ ticket.ticketNo }}</span>
+                  <span class="num text-sm font-semibold text-gray-100">{{ ticket.ticketNo }}</span>
                   <StatusBadge :status="ticket.status" />
                   <TimeoutBadge :timeout-status="ticket.timeoutStatus" />
                 </div>
@@ -143,11 +133,11 @@ function goWaybills(): void {
                   异常类型：
                   <span class="text-brand">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</span>
                 </p>
-                <p class="num mt-1 text-[11px] text-gray-500">
+                <p class="num mt-1 text-micro text-gray-500">
                   处理期限：{{ formatDateTime(ticket.deadlineAt) }}
                 </p>
               </div>
-              <button type="button" class="btn-neon !px-3 !py-1.5 text-xs" @click="goDetail(ticket.id)">
+              <button type="button" class="btn btn-sm btn-text" @click="goDetail(ticket.id)">
                 查看进度
                 <ChevronRight :size="14" />
               </button>
@@ -160,7 +150,7 @@ function goWaybills(): void {
           <button
             v-if="ticketStore.customerPage?.hasMore"
             type="button"
-            class="btn-ghost"
+            class="btn btn-md btn-text"
             :disabled="loadingMore"
             @click="loadMore"
           >

@@ -37,7 +37,10 @@ import {
   EXCEPTION_TYPE_LABELS,
   PRIORITY_LABELS,
   formatDateTime,
+  logOperatorLabel,
+  statusTransitionLabel,
 } from '@/utils/display';
+import type { StatusLog } from '@/api/api-contracts';
 
 const route = useRoute();
 const router = useRouter();
@@ -45,6 +48,11 @@ const ticketStore = useTicketStore();
 
 const ticketId = Number(route.params.id);
 const ticket = computed(() => ticketStore.currentInternalTicket);
+
+/** 状态流转留痕（最新在前） */
+const statusLogsDesc = computed<StatusLog[]>(() =>
+  [...(ticket.value?.statusLogs ?? [])].reverse(),
+);
 const loadFailed = computed(
   () => !!ticketStore.error && !ticketStore.loading.internalDetail && !ticket.value,
 );
@@ -161,15 +169,15 @@ function goBack(): void {
     <main class="mx-auto w-full max-w-4xl px-4 py-6">
       <!-- 顶部 -->
       <div class="mb-5 flex flex-wrap items-center gap-3">
-        <button type="button" class="btn-ghost !px-2.5" @click="goBack">
+        <button type="button" class="btn btn-sm btn-text btn-icon" @click="goBack">
           <ArrowLeft :size="15" />
         </button>
         <template v-if="ticket">
-          <h1 class="num text-lg font-semibold text-gray-100">{{ ticket.ticketNo }}</h1>
+          <h1 class="num text-module font-semibold text-gray-100">{{ ticket.ticketNo }}</h1>
           <StatusBadge :status="ticket.status" />
           <TimeoutBadge :timeout-status="ticket.timeoutStatus" />
         </template>
-        <h1 v-else class="text-lg font-semibold text-gray-100">工单详情（运营）</h1>
+        <h1 v-else class="text-module font-semibold text-gray-100">工单详情（运营）</h1>
       </div>
 
       <LoadingSkeleton v-if="ticketStore.loading.internalDetail" type="card" :rows="3" />
@@ -186,15 +194,15 @@ function goBack(): void {
 
       <template v-else-if="ticket">
         <!-- 工单信息卡 -->
-        <GlassCard glow padding="p-5" class="mb-4">
+        <GlassCard padding="p-5" class="mb-4">
           <template #header>
             <div class="flex w-full flex-wrap items-center gap-2">
-              <span class="text-sm font-medium text-gray-200">工单信息</span>
+              <span class="card-title">工单信息</span>
               <!-- 仅 PENDING 显示受理按钮 -->
               <button
                 v-if="isPending"
                 type="button"
-                class="btn-neon ml-auto !px-3 !py-1 text-xs"
+                class="btn btn-sm btn-primary ml-auto"
                 :disabled="ticketStore.submitting"
                 @click="acceptVisible = true"
               >
@@ -211,7 +219,7 @@ function goBack(): void {
             </div>
             <div>
               <dt class="text-xs text-gray-500">异常类型</dt>
-              <dd class="mt-0.5 text-accent">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</dd>
+              <dd class="mt-0.5 text-brand">{{ EXCEPTION_TYPE_LABELS[ticket.type] }}</dd>
             </div>
             <div>
               <dt class="text-xs text-gray-500">优先级</dt>
@@ -224,18 +232,18 @@ function goBack(): void {
               </dd>
             </div>
           </dl>
-          <p class="num mt-3 border-t border-white/[0.06] pt-3 text-[11px] text-gray-500">
-            截止时间：{{ formatDateTime(ticket.deadlineAt) }}
+          <p class="num mt-3 border-t border-edge-faint pt-3 text-micro text-gray-500">
+            预警时间：{{ formatDateTime(ticket.warningAt) }} · 截止时间：{{ formatDateTime(ticket.deadlineAt) }}
           </p>
         </GlassCard>
 
         <!-- 内部核实记录区（受理后可见，INTERNAL_ONLY） -->
         <GlassCard padding="p-5" class="mb-4 !border-dashed !border-gray-500/40">
           <template #header>
-            <span class="flex items-center gap-1.5 text-sm font-medium text-gray-300">
+            <span class="card-title">
               <Lock :size="14" class="text-gray-400" />
               内部核实记录
-              <span class="ml-1 inline-flex items-center gap-1 rounded-md border border-dashed border-gray-500/50 px-1.5 py-0.5 text-[10px] text-gray-400">
+              <span class="ml-1 inline-flex items-center gap-1 rounded-md border border-dashed border-gray-500/50 px-1.5 py-0.5 text-micro text-gray-400">
                 INTERNAL · 仅内部可见
               </span>
             </span>
@@ -256,8 +264,8 @@ function goBack(): void {
             />
 
             <!-- 新增核实记录：PROCESSING 可编辑，其余状态只读 -->
-            <div class="mt-4 border-t border-white/[0.06] pt-4">
-              <label for="record-content" class="mb-2 flex items-center gap-1.5 text-xs font-medium text-gray-300">
+            <div class="mt-4 border-t border-edge-faint pt-4">
+              <label for="record-content" class="input-label mb-2 flex items-center gap-1.5">
                 <NotebookPen :size="13" />
                 新增核实记录
               </label>
@@ -277,12 +285,12 @@ function goBack(): void {
                   {{ recordError }}
                 </p>
                 <span v-else />
-                <span class="num text-[11px] text-gray-500">{{ recordContent.trim().length }} / {{ RECORD_MAX }}</span>
+                <span class="num text-micro text-gray-500">{{ recordContent.trim().length }} / {{ RECORD_MAX }}</span>
               </div>
               <div class="mt-2 flex justify-end">
                 <button
                   type="button"
-                  class="btn-ghost"
+                  class="btn btn-md btn-text"
                   :disabled="!isProcessing || ticketStore.submitting"
                   @click="handleSaveRecord"
                 >
@@ -295,15 +303,15 @@ function goBack(): void {
         </GlassCard>
 
         <!-- 处理结果提交卡：仅 PROCESSING 可编辑 -->
-        <GlassCard padding="p-5" :glow="isProcessing" :class="!isProcessing ? 'opacity-70' : ''">
+        <GlassCard padding="p-5" :class="!isProcessing ? 'opacity-70' : ''">
           <template #header>
-            <span class="text-sm font-medium text-gray-200">处理方案与结果</span>
+            <span class="card-title">处理方案与结果</span>
           </template>
 
           <template v-if="isProcessing">
             <form class="space-y-4" @submit.prevent="handleSubmitResult">
               <div>
-                <label for="plan" class="mb-2 block text-xs font-medium text-gray-300">
+                <label for="plan" class="input-label mb-2">
                   处理方案 <span class="text-danger">*</span>
                 </label>
                 <textarea
@@ -323,7 +331,7 @@ function goBack(): void {
               </div>
 
               <div>
-                <label for="result" class="mb-2 block text-xs font-medium text-gray-300">
+                <label for="result" class="input-label mb-2">
                   处理结果 <span class="text-danger">*</span>
                 </label>
                 <textarea
@@ -342,10 +350,10 @@ function goBack(): void {
                 </p>
               </div>
 
-              <div class="flex justify-end border-t border-white/[0.06] pt-4">
+              <div class="flex justify-end border-t border-edge-faint pt-4">
                 <button
                   type="submit"
-                  class="btn-neon min-w-[168px]"
+                  class="btn btn-lg btn-primary min-w-[168px]"
                   :disabled="!resultValid || ticketStore.submitting"
                 >
                   <Loader2 v-if="ticketStore.submitting" :size="15" class="animate-spin" />
@@ -361,6 +369,26 @@ function goBack(): void {
             title="当前状态不可提交处理结果"
             :description="isPending ? '请先受理工单' : '处理结果已提交，等待客服确认或工单已关闭'"
           />
+        </GlassCard>
+
+        <!-- 状态流转留痕（US-11：全部处理过程可追溯，最新在前） -->
+        <GlassCard padding="p-5" class="mt-4">
+          <template #header>
+            <span class="card-title">状态流转留痕</span>
+          </template>
+          <ul v-if="statusLogsDesc.length" class="space-y-2 text-xs">
+            <li
+              v-for="log in statusLogsDesc"
+              :key="log.id"
+              class="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-edge-faint pb-2 last:border-0 last:pb-0"
+            >
+              <span class="text-gray-200">{{ statusTransitionLabel(log) }}</span>
+              <span class="text-gray-500">· {{ logOperatorLabel(log) }}</span>
+              <span v-if="log.reason" class="text-gray-400">（{{ log.reason }}）</span>
+              <span class="num ml-auto text-gray-500">{{ formatDateTime(log.createdAt) }}</span>
+            </li>
+          </ul>
+          <p v-else class="text-xs text-gray-500">暂无状态变更记录</p>
         </GlassCard>
       </template>
     </main>
